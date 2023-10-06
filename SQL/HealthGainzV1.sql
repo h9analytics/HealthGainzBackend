@@ -1,14 +1,3 @@
-CREATE TABLE clinic (
-    id BIGINT GENERATED ALWAYS AS IDENTITY,
-    name TEXT NOT NULL,
-    address TEXT NOT NULL,
-    phonenumber TEXT NOT NULL,
-    emailaddress TEXT NOT NULL,
-    PRIMARY KEY (id),
-    UNIQUE (name),
-    UNIQUE (address)
-);
-
 CREATE TABLE "user" (
     id BIGINT GENERATED ALWAYS AS IDENTITY,
     name TEXT NOT NULL,
@@ -21,6 +10,17 @@ CREATE TABLE "user" (
     UNIQUE (phonenumber),
     UNIQUE (emailaddress),
 	CHECK (roles <@ ARRAY['Administrator', 'Therapist', 'Client'])
+);
+
+CREATE TABLE clinic (
+    id BIGINT GENERATED ALWAYS AS IDENTITY,
+    name TEXT NOT NULL,
+    address TEXT NOT NULL,
+    phonenumber TEXT NOT NULL,
+    emailaddress TEXT NOT NULL,
+    PRIMARY KEY (id),
+    UNIQUE (name),
+    UNIQUE (address)
 );
 
 CREATE TABLE therapist (
