@@ -47,7 +47,7 @@ CREATE TABLE client (
 CREATE TABLE appointment (
     id BIGINT GENERATED ALWAYS AS IDENTITY,
     clientid BIGINT NOT NULL,
-    dateandtime TIMESTAMP NOT NULL,
+    datetime TIMESTAMP NOT NULL,
     PRIMARY KEY (id),
     FOREIGN KEY (clientid) REFERENCES client (id) ON DELETE CASCADE
 );
