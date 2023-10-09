@@ -187,6 +187,26 @@ app.get('/getTherapistsByClinicAndAddressNotEmpty', (request, response) => {
     doFilterQuery(sql, [request.query.clinicid], request, response)
 })
 
+app.get('/getTherapistByUserId', async (request, response) => {
+    let healthgainzClient = new Client(healthgainzConfig)
+    try {
+        await healthgainzClient.connect()
+		await checkCredentials(request, ['Therapist'], healthgainzClient)
+        let result = await healthgainzClient.query(therapistSelectSQL + ' WHERE userid = $1', [request.query.userid])
+        if (result.rows.length == 0) throw new Error('Therapist not found')
+		else {
+			response.writeHead(200, {'Content-Type': 'application/json'})
+			response.end(JSON.stringify(result.rows[0]))
+		}
+    }
+    catch (error) {
+        handleError(response, error.message)
+    }
+    finally {
+        await healthgainzClient.end()
+    }
+})
+
 app.listen(3003, () => {
     console.log('Microservice \'HealthGainz:TherapistList\' running on port 3003')
 })
