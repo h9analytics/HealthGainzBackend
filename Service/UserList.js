@@ -40,7 +40,7 @@ const doFilterQuery = async (sql, values, request, response) => {
     let healthgainzClient = new Client(healthgainzConfig)
     try {
         await healthgainzClient.connect()
-        await checkCredentials(request, ['Administrator'], healthgainzClient)
+        await checkCredentials(request, ['Administrator', 'Therapist'], healthgainzClient)
         let result = values.length ? await healthgainzClient.query(sql, values) : await healthgainzClient.query(sql)
         response.writeHead(200, {'Content-Type': 'application/json'})
         response.end(JSON.stringify(result.rows))
@@ -67,7 +67,7 @@ app.post('/createUser', async (request, response) => {
     let healthgainzClient = new Client(healthgainzConfig)
     try {
         await healthgainzClient.connect()
-		await checkCredentials(request, ['Administrator'], healthgainzClient)
+		await checkCredentials(request, ['Administrator', 'Therapist'], healthgainzClient)
 		let result = await healthgainzClient.query('INSERT INTO "user" VALUES (DEFAULT, $1, $2, $3, $4, $5, $6) RETURNING *', Object.values(request.body))
 		response.writeHead(200, {'Content-Type': 'application/json'})
         response.end(JSON.stringify(result.rows[0]))
@@ -84,7 +84,7 @@ app.post('/updateUser', async (request, response) => {
     let healthgainzClient = new Client(healthgainzConfig)
     try {
         await healthgainzClient.connect()
-		await checkCredentials(request, ['Administrator'], healthgainzClient)
+		await checkCredentials(request, ['Administrator', 'Therapist'], healthgainzClient)
         let result = await healthgainzClient.query('UPDATE "user" SET name = $2, address = $3, phonenumber = $4, emailaddress = $5, password = $6, roles = $7 WHERE id = $1 RETURNING *', Object.values(request.body))
 		response.writeHead(200, {'Content-Type': 'application/json'})
         response.end(JSON.stringify(result.rows[0]))
@@ -101,7 +101,7 @@ app.get('/deleteUser', async (request, response) => {
     let healthgainzClient = new Client(healthgainzConfig)
     try {
         await healthgainzClient.connect()
-		await checkCredentials(request, ['Administrator'], healthgainzClient)
+		await checkCredentials(request, ['Administrator', 'Therapist'], healthgainzClient)
         await healthgainzClient.query('DELETE FROM "user" WHERE id = $1', [request.query.id])
         response.writeHead(200)
         response.end()
@@ -118,7 +118,7 @@ app.get('/getUserById', async (request, response) => {
     let healthgainzClient = new Client(healthgainzConfig)
     try {
         await healthgainzClient.connect()
-		await checkCredentials(request, ['Administrator'], healthgainzClient)
+		await checkCredentials(request, ['Administrator', 'Therapist'], healthgainzClient)
         let result = await healthgainzClient.query(userSelectSQL + ' WHERE id = $1', [request.query.id])
         if (result.rows.length == 0) throw new Error('User not found')
 		else {
@@ -138,7 +138,7 @@ app.get('/getUsers', async (request, response) => {
     let healthgainzClient = new Client(healthgainzConfig)
     try {
         await healthgainzClient.connect()
-		await checkCredentials(request, ['Administrator'], healthgainzClient)
+		await checkCredentials(request, ['Administrator', 'Therapist'], healthgainzClient)
         let result = await healthgainzClient.query(userSelectSQL)
         response.writeHead(200, {'Content-Type': 'application/json'})
         response.end(JSON.stringify(result.rows))
