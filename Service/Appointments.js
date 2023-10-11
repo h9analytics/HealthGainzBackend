@@ -195,7 +195,7 @@ app.get('/getAppointmentsByClientAndDateTimeNotEmpty', (request, response) => {
 })
 
 app.listen(3005, () => {
-    console.log('Microservice \'HealthGainz:AppointmentList\' running on port 3005')
+    console.log('Microservice \'HealthGainz:Appointments\' running on port 3005')
 })
 
 module.exports = app

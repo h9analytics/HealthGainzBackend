@@ -208,7 +208,7 @@ app.get('/getClientByUserId', async (request, response) => {
 })
 
 app.listen(3004, () => {
-    console.log('Microservice \'HealthGainz:ClientList\' running on port 3004')
+    console.log('Microservice \'HealthGainz:Clients\' running on port 3004')
 })
 
 module.exports = app

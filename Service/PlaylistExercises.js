@@ -188,7 +188,7 @@ app.get('/getPlaylistExercisesByPlaylistAndDescriptionNotEmpty', (request, respo
 })
 
 app.listen(3008, () => {
-    console.log('Microservice \'HealthGainz:PlaylistExerciseList\' running on port 3008')
+    console.log('Microservice \'HealthGainz:PlaylistExercises\' running on port 3008')
 })
 
 module.exports = app

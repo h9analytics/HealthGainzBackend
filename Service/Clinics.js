@@ -220,7 +220,7 @@ app.get('/getClinicsByEmailAddressNotEmpty', (request, response) => {
 })
 
 app.listen(3002, () => {
-    console.log('Microservice \'HealthGainz:ClinicList\' running on port 3002')
+    console.log('Microservice \'HealthGainz:Clinics\' running on port 3002')
 })
 
 module.exports = app

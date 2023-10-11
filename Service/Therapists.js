@@ -208,7 +208,7 @@ app.get('/getTherapistByUserId', async (request, response) => {
 })
 
 app.listen(3003, () => {
-    console.log('Microservice \'HealthGainz:TherapistList\' running on port 3003')
+    console.log('Microservice \'HealthGainz:Therapists\' running on port 3003')
 })
 
 module.exports = app

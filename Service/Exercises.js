@@ -323,7 +323,7 @@ app.get('/getExercisesByVideoURLNotEmpty', (request, response) => {
 })
 
 app.listen(3006, () => {
-    console.log('Microservice \'HealthGainz:ExerciseList\' running on port 3006')
+    console.log('Microservice \'HealthGainz:Exercises\' running on port 3006')
 })
 
 module.exports = app

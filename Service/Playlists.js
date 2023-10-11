@@ -169,7 +169,7 @@ app.get('/getPlaylistsByNameNotEmpty', (request, response) => {
 })
 
 app.listen(3007, () => {
-    console.log('Microservice \'HealthGainz:PlaylistList\' running on port 3007')
+    console.log('Microservice \'HealthGainz:Playlists\' running on port 3007')
 })
 
 module.exports = app

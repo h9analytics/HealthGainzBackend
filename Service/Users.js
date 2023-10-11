@@ -239,7 +239,7 @@ app.post('/getUserByEmailAddressAndPassword', async (request, response) => {
 })
 
 app.listen(3001, () => {
-    console.log('Microservice \'HealthGainz:UserList\' running on port 3001')
+    console.log('Microservice \'HealthGainz:Users\' running on port 3001')
 })
 
 module.exports = app
