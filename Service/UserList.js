@@ -219,23 +219,6 @@ app.get('/getUsersByEmailAddressNotEmpty', (request, response) => {
     doFilterQuery(sql, [], request, response)
 })
 
-app.get('/getUsersByNameStartsWith', async (request, response) => {
-    let healthgainzClient = new Client(healthgainzConfig)
-    try {
-        await healthgainzClient.connect()
-		await checkCredentials(request, ['Administrator', 'Therapist'], healthgainzClient)
-        let result = await healthgainzClient.query('SELECT id, name, address FROM "user" WHERE name ILIKE $1', [request.query.prefix + '%'])
-        response.writeHead(200, {'Content-Type': 'application/json'})
-        response.end(JSON.stringify(result.rows))
-    }
-    catch (error) {
-        handleError(response, error.message)
-    }
-    finally {
-        await healthgainzClient.end()
-    }
-})
-
 app.post('/getUserByEmailAddressAndPassword', async (request, response) => {
     let healthgainzClient = new Client(healthgainzConfig)
     try {
