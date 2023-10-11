@@ -67,7 +67,7 @@ app.post('/createClient', async (request, response) => {
     let healthgainzClient = new Client(healthgainzConfig)
     try {
         await healthgainzClient.connect()
-		await checkCredentials(request, ['Therapist'], healthgainzClient)
+		await checkCredentials(request, ['Administrator', 'Therapist'], healthgainzClient)
         let result = await healthgainzClient.query('INSERT INTO client VALUES (DEFAULT, $1, $2, $3) RETURNING *', Object.values(request.body))
 		response.writeHead(200, {'Content-Type': 'application/json'})
         response.end(JSON.stringify(result.rows[0]))
@@ -84,7 +84,7 @@ app.post('/updateClient', async (request, response) => {
     let healthgainzClient = new Client(healthgainzConfig)
     try {
         await healthgainzClient.connect()
-		await checkCredentials(request, ['Therapist'], healthgainzClient)
+		await checkCredentials(request, ['Administrator', 'Therapist'], healthgainzClient)
         let result = await healthgainzClient.query('UPDATE client SET userid = $2, therapistid = $3, dateofbirth = $4 WHERE id = $1 RETURNING *', Object.values(request.body))
 		response.writeHead(200, {'Content-Type': 'application/json'})
         response.end(JSON.stringify(result.rows[0]))
@@ -101,7 +101,7 @@ app.get('/deleteClient', async (request, response) => {
     let healthgainzClient = new Client(healthgainzConfig)
     try {
         await healthgainzClient.connect()
-		await checkCredentials(request, ['Therapist'], healthgainzClient)
+		await checkCredentials(request, ['Administrator', 'Therapist'], healthgainzClient)
         await healthgainzClient.query('DELETE FROM client WHERE id = $1', [request.query.id])
         response.writeHead(200)
         response.end()
@@ -119,7 +119,7 @@ app.get('/getClientById', async (request, response) => {
     try {
         await healthgainzClient.connect()
 		await checkCredentials(request, ['Administrator', 'Therapist'], healthgainzClient)
-        let result = await healthgainzClient.query(clientSelectSQL + ' WHERE id = $1', [request.query.id])
+        let result = await healthgainzClient.query(clientSelectSQL + ' WHERE client.id = $1', [request.query.id])
         if (result.rows.length == 0) throw new Error('Client not found')
 		else {
 			response.writeHead(200, {'Content-Type': 'application/json'})
@@ -134,29 +134,12 @@ app.get('/getClientById', async (request, response) => {
     }
 })
 
-app.get('/getClients', async (request, response) => {
-    let healthgainzClient = new Client(healthgainzConfig)
-    try {
-        await healthgainzClient.connect()
-		await checkCredentials(request, ['Administrator'], healthgainzClient)
-        let result = await healthgainzClient.query(clientSelectSQL)
-        response.writeHead(200, {'Content-Type': 'application/json'})
-        response.end(JSON.stringify(result.rows))
-    }
-    catch (error) {
-        handleError(response, error.message)
-    }
-    finally {
-        await healthgainzClient.end()
-    }
-})
-
 app.get('/getClientsByTherapist', async (request, response) => {
     let healthgainzClient = new Client(healthgainzConfig)
     try {
         await healthgainzClient.connect()
 		await checkCredentials(request, ['Administrator', 'Therapist'], healthgainzClient)
-        let result = await healthgainzClient.query(clientSelectSQL + ' WHERE therapistid = $1', [request.query.therapistid])
+        let result = await healthgainzClient.query(clientSelectSQL + ' WHERE client.therapistid = $1', [request.query.therapistId])
         response.writeHead(200, {'Content-Type': 'application/json'})
         response.end(JSON.stringify(result.rows))
     }
@@ -172,36 +155,56 @@ app.get('/getClientsByTherapistAndNameContains', (request, response) => {
     let query = request.query
     let value = query.value
     if (!value) { handleError(response, 'Value required'); return }
-    let sql = clientSelectSQL + ' WHERE therapistid = $1 AND name ILIKE $2'
-    doFilterQuery(sql, [query.therapistid, '%' + value + '%'], request, response)
+    let sql = clientSelectSQL + ' WHERE client.therapistid = $1 AND name ILIKE $2'
+    doFilterQuery(sql, [query.therapistId, '%' + value + '%'], request, response)
 })
 
 app.get('/getClientsByTherapistAndNameEmpty', (request, response) => {
-    let sql = clientSelectSQL + ' WHERE therapistid = $1 AND name IS NULL'
-    doFilterQuery(sql, [request.query.therapistid], request, response)
+    let sql = clientSelectSQL + ' WHERE client.therapistid = $1 AND "user".name IS NULL'
+    doFilterQuery(sql, [request.query.therapistId], request, response)
 })
 
 app.get('/getClientsByTherapistAndNameNotEmpty', (request, response) => {
-    let sql = clientSelectSQL + ' WHERE therapistid = $1 AND name IS NOT NULL'
-    doFilterQuery(sql, [request.query.therapistid], request, response)
+    let sql = clientSelectSQL + ' WHERE client.therapistid = $1 AND "user".name IS NOT NULL'
+    doFilterQuery(sql, [request.query.therapistId], request, response)
 })
 
 app.get('/getClientsByTherapistAndAddressContains', (request, response) => {
     let query = request.query
     let value = query.value
     if (!value) { handleError(response, 'Value required'); return }
-    let sql = clientSelectSQL + ' WHERE therapistid = $1 AND address ILIKE $2'
-    doFilterQuery(sql, [query.therapistid, '%' + value + '%'], request, response)
+    let sql = clientSelectSQL + ' WHERE client.therapistid = $1 AND "user".address ILIKE $2'
+    doFilterQuery(sql, [query.therapistId, '%' + value + '%'], request, response)
 })
 
 app.get('/getClientsByTherapistAndAddressEmpty', (request, response) => {
-    let sql = clientSelectSQL + ' WHERE therapistid = $1 AND address IS NULL'
-    doFilterQuery(sql, [request.query.therapistid], request, response)
+    let sql = clientSelectSQL + ' WHERE client.therapistid = $1 AND "user".address IS NULL'
+    doFilterQuery(sql, [request.query.therapistId], request, response)
 })
 
 app.get('/getClientsByTherapistAndAddressNotEmpty', (request, response) => {
-    let sql = clientSelectSQL + ' WHERE therapistid = $1 AND address IS NOT NULL'
-    doFilterQuery(sql, [request.query.therapistid], request, response)
+    let sql = clientSelectSQL + ' WHERE client.therapistid = $1 AND "user".address IS NOT NULL'
+    doFilterQuery(sql, [request.query.therapistId], request, response)
+})
+
+app.get('/getClientByUserId', async (request, response) => {
+    let healthgainzClient = new Client(healthgainzConfig)
+    try {
+        await healthgainzClient.connect()
+		await checkCredentials(request, ['Administrator', 'Therapist', 'Client'], healthgainzClient)
+        let result = await healthgainzClient.query(clientSelectSQL + ' WHERE client.userid = $1', [request.query.userId])
+        if (result.rows.length == 0) throw new Error('Client not found')
+		else {
+			response.writeHead(200, {'Content-Type': 'application/json'})
+			response.end(JSON.stringify(result.rows[0]))
+		}
+    }
+    catch (error) {
+        handleError(response, error.message)
+    }
+    finally {
+        await healthgainzClient.end()
+    }
 })
 
 app.listen(3004, () => {
