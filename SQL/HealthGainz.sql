@@ -1,3 +1,5 @@
+-- Version 1
+
 CREATE TABLE "user" (
     id BIGINT GENERATED ALWAYS AS IDENTITY,
     name TEXT NOT NULL,
