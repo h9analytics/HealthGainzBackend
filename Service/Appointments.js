@@ -1,12 +1,14 @@
-// Version 1
+// version 1
 
 const { Client } = require('pg')
 const types = require('pg').types
 const express = require('express')
 
-const healthgainzConfig = require('./HealthGainzConfig')
+const { healthgainzConfig, checkCredentials, handleError } = require('./HealthGainz')
 
 const appointmentSelectSQL = 'SELECT * FROM appointment'
+
+// the following type parsers are required for returning correct JSON
 
 types.setTypeParser(types.builtins.INT8, (value) => {
 	return value == null ? null : parseInt(value)
@@ -23,20 +25,6 @@ types.setTypeParser(types.builtins.INT4, (value) => {
 types.setTypeParser(types.builtins.DATE, (value) => {
 	return value == null ? null : value.substring(0, 10)
 })
-
-const handleError = (response, message) => {
-    response.writeHead(409, {'Content-Type': 'text/plain'})
-    response.end(message)
-}
-
-const checkCredentials = async (request, roles, healthgainzClient) => {
-	let values = request.headers.authorization.split(':')
-	let result = await healthgainzClient.query('SELECT * FROM "user" WHERE emailaddress = $1 AND password = $2', values)
-	if (result.rows.length == 0) throw new Error('Login is not valid')
-	let userRoles = result.rows[0].roles
-    let permitted = roles.some((item) => userRoles.includes(item))
-	if (!permitted) throw new Error('Login does not have the required roles')
-}
 
 const doFilterQuery = async (sql, values, request, response) => {
     let healthgainzClient = new Client(healthgainzConfig)
@@ -141,7 +129,7 @@ app.get('/getAppointmentsByClient', async (request, response) => {
     try {
         await healthgainzClient.connect()
 		await checkCredentials(request, ['Administrator', 'Therapist', 'Client'], healthgainzClient)
-        let result = await healthgainzClient.query(appointmentSelectSQL + ' WHERE clientid = $1', [request.query.clientId])
+        let result = await healthgainzClient.query(appointmentSelectSQL + ' WHERE clientid = $1', [request.query.clientid])
         response.writeHead(200, {'Content-Type': 'application/json'})
         response.end(JSON.stringify(result.rows))
     }
@@ -158,7 +146,7 @@ app.get('/getAppointmentsByClientAndDateTimeBefore', (request, response) => {
     let value = query.value
     if (!value) { handleError(response, 'Value required'); return }
     let sql = appointmentSelectSQL + ' WHERE clientid = $1 AND datetime < $2'
-    doFilterQuery(sql, [query.clientId, value], request, response)
+    doFilterQuery(sql, [query.clientid, value], request, response)
 })
 
 app.get('/getAppointmentsByClientAndDateTimeEquals', (request, response) => {
@@ -166,7 +154,7 @@ app.get('/getAppointmentsByClientAndDateTimeEquals', (request, response) => {
     let value = query.value
     if (!value) { handleError(response, 'Value required'); return }
     let sql = appointmentSelectSQL + ' WHERE clientid = $1 AND datetime = $2'
-    doFilterQuery(sql, [query.clientId, value], request, response)
+    doFilterQuery(sql, [query.clientid, value], request, response)
 })
 
 app.get('/getAppointmentsByClientAndDateTimeAfter', (request, response) => {
@@ -174,7 +162,7 @@ app.get('/getAppointmentsByClientAndDateTimeAfter', (request, response) => {
     let value = query.value
     if (!value) { handleError(response, 'Value required'); return }
     let sql = appointmentSelectSQL + ' WHERE clientid = $1 AND datetime > $2'
-    doFilterQuery(sql, [query.clientId, value], request, response)
+    doFilterQuery(sql, [query.clientid, value], request, response)
 })
 
 app.get('/getAppointmentsByClientAndDateTimeBetween', (request, response) => {
@@ -183,17 +171,17 @@ app.get('/getAppointmentsByClientAndDateTimeBetween', (request, response) => {
     let value2 = query.value2
     if (!value1 || !value2) { handleError(response, 'Two values required'); return }
     let sql = appointmentSelectSQL + ' WHERE clientid = $1 AND datetime BETWEEN $2 AND $3'
-    doFilterQuery(sql, [query.clientId, value1, value2], request, response)
+    doFilterQuery(sql, [query.clientid, value1, value2], request, response)
 })
 
 app.get('/getAppointmentsByClientAndDateTimeEmpty', (request, response) => {
     let sql = appointmentSelectSQL + ' WHERE clientid = $1 AND datetime IS NULL'
-    doFilterQuery(sql, [request.query.clientId], request, response)
+    doFilterQuery(sql, [request.query.clientid], request, response)
 })
 
 app.get('/getAppointmentsByClientAndDateTimeNotEmpty', (request, response) => {
     let sql = appointmentSelectSQL + ' WHERE clientid = $1 AND datetime IS NOT NULL'
-    doFilterQuery(sql, [request.query.clientId], request, response)
+    doFilterQuery(sql, [request.query.clientid], request, response)
 })
 
 app.listen(3005, () => {

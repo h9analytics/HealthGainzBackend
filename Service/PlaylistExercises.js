@@ -1,12 +1,14 @@
-// Version 1
+// version 1
 
 const { Client } = require('pg')
 const types = require('pg').types
 const express = require('express')
 
-const healthgainzConfig = require('./HealthGainzConfig')
+const { healthgainzConfig, checkCredentials, handleError } = require('./HealthGainz')
 
 const playlistExerciseSelectSQL = 'SELECT exercise.name, exercise.description, playlistexercise.* FROM playlistexercise JOIN exercise ON playlistexercise.exerciseid = exercise.id'
+
+// the following type parsers are required for returning correct JSON
 
 types.setTypeParser(types.builtins.INT8, (value) => {
 	return value == null ? null : parseInt(value)
@@ -23,20 +25,6 @@ types.setTypeParser(types.builtins.INT4, (value) => {
 types.setTypeParser(types.builtins.DATE, (value) => {
 	return value == null ? null : value.substring(0, 10)
 })
-
-const handleError = (response, message) => {
-    response.writeHead(409, {'Content-Type': 'text/plain'})
-    response.end(message)
-}
-
-const checkCredentials = async (request, roles, healthgainzClient) => {
-	let values = request.headers.authorization.split(':')
-	let result = await healthgainzClient.query('SELECT * FROM "user" WHERE emailaddress = $1 AND password = $2', values)
-	if (result.rows.length == 0) throw new Error('Login is not valid')
-	let userRoles = result.rows[0].roles
-    let permitted = roles.some((item) => userRoles.includes(item))
-	if (!permitted) throw new Error('Login does not have the required roles')
-}
 
 const doFilterQuery = async (sql, values, request, response) => {
     let healthgainzClient = new Client(healthgainzConfig)
@@ -141,7 +129,7 @@ app.get('/getPlaylistExercisesByPlaylist', async (request, response) => {
     try {
         await healthgainzClient.connect()
 		await checkCredentials(request, ['Administrator', 'Therapist', 'Client'], healthgainzClient)
-        let result = await healthgainzClient.query(playlistExerciseSelectSQL + ' WHERE playlistexercise.playlistid = $1', [request.query.playlistId])
+        let result = await healthgainzClient.query(playlistExerciseSelectSQL + ' WHERE playlistexercise.playlistid = $1', [request.query.playlistid])
         response.writeHead(200, {'Content-Type': 'application/json'})
         response.end(JSON.stringify(result.rows))
     }
@@ -158,17 +146,17 @@ app.get('/getPlaylistExercisesByPlaylistAndNameContains', (request, response) =>
     let value = query.value
     if (!value) { handleError(response, 'Value required'); return }
     let sql = playlistExerciseSelectSQL + ' WHERE playlistexercise.playlistid = $1 AND exercise.name ILIKE $2'
-    doFilterQuery(sql, [query.playlistId, '%' + value + '%'], request, response)
+    doFilterQuery(sql, [query.playlistid, '%' + value + '%'], request, response)
 })
 
 app.get('/getPlaylistExercisesByPlaylistAndNameEmpty', (request, response) => {
     let sql = playlistExerciseSelectSQL + ' WHERE playlistexercise.playlistid = $1 AND exercise.name IS NULL'
-    doFilterQuery(sql, [request.query.playlistId], request, response)
+    doFilterQuery(sql, [request.query.playlistid], request, response)
 })
 
 app.get('/getPlaylistExercisesByPlaylistAndNameNotEmpty', (request, response) => {
     let sql = playlistExerciseSelectSQL + ' WHERE playlistexercise.playlistid = $1 AND exercise.name IS NOT NULL'
-    doFilterQuery(sql, [request.query.playlistId], request, response)
+    doFilterQuery(sql, [request.query.playlistid], request, response)
 })
 
 app.get('/getPlaylistExercisesByPlaylistAndDescriptionContains', (request, response) => {
@@ -176,17 +164,17 @@ app.get('/getPlaylistExercisesByPlaylistAndDescriptionContains', (request, respo
     let value = query.value
     if (!value) { handleError(response, 'Value required'); return }
     let sql = playlistExerciseSelectSQL + ' WHERE playlistexercise.playlistid = $1 AND exercise.description ILIKE $2'
-    doFilterQuery(sql, [query.playlistId, '%' + value + '%'], request, response)
+    doFilterQuery(sql, [query.playlistid, '%' + value + '%'], request, response)
 })
 
 app.get('/getPlaylistExercisesByPlaylistAndDescriptionEmpty', (request, response) => {
     let sql = playlistExerciseSelectSQL + ' WHERE playlistexercise.playlistid = $1 AND exercise.description IS NULL'
-    doFilterQuery(sql, [request.query.playlistId], request, response)
+    doFilterQuery(sql, [request.query.playlistid], request, response)
 })
 
 app.get('/getPlaylistExercisesByPlaylistAndDescriptionNotEmpty', (request, response) => {
     let sql = playlistExerciseSelectSQL + ' WHERE playlistexercise.playlistid = $1 AND exercise.description IS NOT NULL'
-    doFilterQuery(sql, [request.query.playlistId], request, response)
+    doFilterQuery(sql, [request.query.playlistid], request, response)
 })
 
 app.listen(3008, () => {

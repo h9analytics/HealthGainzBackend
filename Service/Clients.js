@@ -1,12 +1,14 @@
-// Version 1
+// version 1
 
 const { Client } = require('pg')
 const types = require('pg').types
 const express = require('express')
 
-const healthgainzConfig = require('./HealthGainzConfig')
+const { healthgainzConfig, checkCredentials, handleError } = require('./HealthGainz')
 
 const clientSelectSQL = 'SELECT "user".name, "user".address, client.* FROM client JOIN "user" ON client.userid = "user".id'
+
+// the following type parsers are required for returning correct JSON
 
 types.setTypeParser(types.builtins.INT8, (value) => {
 	return value == null ? null : parseInt(value)
@@ -23,20 +25,6 @@ types.setTypeParser(types.builtins.INT4, (value) => {
 types.setTypeParser(types.builtins.DATE, (value) => {
 	return value == null ? null : value.substring(0, 10)
 })
-
-const handleError = (response, message) => {
-    response.writeHead(409, {'Content-Type': 'text/plain'})
-    response.end(message)
-}
-
-const checkCredentials = async (request, roles, healthgainzClient) => {
-	let values = request.headers.authorization.split(':')
-	let result = await healthgainzClient.query('SELECT * FROM "user" WHERE emailaddress = $1 AND password = $2', values)
-	if (result.rows.length == 0) throw new Error('Login is not valid')
-	let userRoles = result.rows[0].roles
-    let permitted = roles.some((item) => userRoles.includes(item))
-	if (!permitted) throw new Error('Login does not have the required roles')
-}
 
 const doFilterQuery = async (sql, values, request, response) => {
     let healthgainzClient = new Client(healthgainzConfig)
@@ -141,7 +129,7 @@ app.get('/getClientsByTherapist', async (request, response) => {
     try {
         await healthgainzClient.connect()
 		await checkCredentials(request, ['Administrator', 'Therapist'], healthgainzClient)
-        let result = await healthgainzClient.query(clientSelectSQL + ' WHERE client.therapistid = $1', [request.query.therapistId])
+        let result = await healthgainzClient.query(clientSelectSQL + ' WHERE client.therapistid = $1', [request.query.therapistid])
         response.writeHead(200, {'Content-Type': 'application/json'})
         response.end(JSON.stringify(result.rows))
     }
@@ -158,17 +146,17 @@ app.get('/getClientsByTherapistAndNameContains', (request, response) => {
     let value = query.value
     if (!value) { handleError(response, 'Value required'); return }
     let sql = clientSelectSQL + ' WHERE client.therapistid = $1 AND name ILIKE $2'
-    doFilterQuery(sql, [query.therapistId, '%' + value + '%'], request, response)
+    doFilterQuery(sql, [query.therapistid, '%' + value + '%'], request, response)
 })
 
 app.get('/getClientsByTherapistAndNameEmpty', (request, response) => {
     let sql = clientSelectSQL + ' WHERE client.therapistid = $1 AND "user".name IS NULL'
-    doFilterQuery(sql, [request.query.therapistId], request, response)
+    doFilterQuery(sql, [request.query.therapistid], request, response)
 })
 
 app.get('/getClientsByTherapistAndNameNotEmpty', (request, response) => {
     let sql = clientSelectSQL + ' WHERE client.therapistid = $1 AND "user".name IS NOT NULL'
-    doFilterQuery(sql, [request.query.therapistId], request, response)
+    doFilterQuery(sql, [request.query.therapistid], request, response)
 })
 
 app.get('/getClientsByTherapistAndAddressContains', (request, response) => {
@@ -176,17 +164,17 @@ app.get('/getClientsByTherapistAndAddressContains', (request, response) => {
     let value = query.value
     if (!value) { handleError(response, 'Value required'); return }
     let sql = clientSelectSQL + ' WHERE client.therapistid = $1 AND "user".address ILIKE $2'
-    doFilterQuery(sql, [query.therapistId, '%' + value + '%'], request, response)
+    doFilterQuery(sql, [query.therapistid, '%' + value + '%'], request, response)
 })
 
 app.get('/getClientsByTherapistAndAddressEmpty', (request, response) => {
     let sql = clientSelectSQL + ' WHERE client.therapistid = $1 AND "user".address IS NULL'
-    doFilterQuery(sql, [request.query.therapistId], request, response)
+    doFilterQuery(sql, [request.query.therapistid], request, response)
 })
 
 app.get('/getClientsByTherapistAndAddressNotEmpty', (request, response) => {
     let sql = clientSelectSQL + ' WHERE client.therapistid = $1 AND "user".address IS NOT NULL'
-    doFilterQuery(sql, [request.query.therapistId], request, response)
+    doFilterQuery(sql, [request.query.therapistid], request, response)
 })
 
 app.get('/getClientByUserId', async (request, response) => {
@@ -194,7 +182,7 @@ app.get('/getClientByUserId', async (request, response) => {
     try {
         await healthgainzClient.connect()
 		await checkCredentials(request, ['Administrator', 'Therapist', 'Client'], healthgainzClient)
-        let result = await healthgainzClient.query(clientSelectSQL + ' WHERE client.userid = $1', [request.query.userId])
+        let result = await healthgainzClient.query(clientSelectSQL + ' WHERE client.userid = $1', [request.query.userid])
         if (result.rows.length == 0) throw new Error('Client not found')
 		else {
 			response.writeHead(200, {'Content-Type': 'application/json'})
