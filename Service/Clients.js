@@ -177,7 +177,7 @@ app.get('/getClientsByTherapistAndAddressNotEmpty', (request, response) => {
     doFilterQuery(sql, [request.query.therapistid], request, response)
 })
 
-app.get('/getClientByUserId', async (request, response) => {
+app.get('/getClientByUser', async (request, response) => {
     let healthgainzClient = new Client(healthgainzConfig)
     try {
         await healthgainzClient.connect()

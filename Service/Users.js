@@ -209,7 +209,7 @@ app.get('/getUsersByEmailAddressNotEmpty', (request, response) => {
     doFilterQuery(sql, [], request, response)
 })
 
-app.post('/logIn', async (request, response) => {
+app.post('/getUserByEmailAddressAndPassword', async (request, response) => {
     let healthgainzClient = new Client(healthgainzConfig)
     try {
         await healthgainzClient.connect()
