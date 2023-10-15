@@ -4,7 +4,7 @@ const { Client } = require('pg')
 const types = require('pg').types
 const express = require('express')
 
-const { healthgainzConfig, checkCredentials, handleError } = require('./HealthGainz')
+const { healthgainzConfig, checkCredentials, handleError } = require('./HealthGainzLibrary')
 
 const clientSelectSQL = 'SELECT "user".name, "user".address, client.* FROM client JOIN "user" ON client.userid = "user".id'
 
