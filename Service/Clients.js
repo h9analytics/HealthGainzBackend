@@ -6,7 +6,7 @@ const express = require('express')
 
 const { healthgainzConfig, checkCredentials, handleError } = require('./HealthGainzLibrary')
 
-const clientSelectSQL = 'SELECT "user".name, "user".address, client.* FROM client JOIN "user" ON client.userid = "user".id'
+const clientSelectSQL = 'SELECT "user".name AS username, "user".address AS useraddress, client.* FROM client JOIN "user" ON client.userid = "user".id'
 
 // the following type parsers are required for returning correct JSON
 
