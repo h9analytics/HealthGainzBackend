@@ -3,6 +3,7 @@
 const { Client } = require('pg')
 const types = require('pg').types
 const express = require('express')
+const cors = require('cors')
 
 const { healthgainzConfig, checkCredentials, handleError } = require('./HealthGainzLibrary')
 
@@ -44,14 +45,8 @@ const doFilterQuery = async (sql, values, request, response) => {
 }
 
 const app = express()
+app.use(cors())
 app.use(express.json())
-
-// Enable CORS for all methods
-app.use(function (request, response, next) {
-    response.header('Access-Control-Allow-Origin', '*')
-    response.header('Access-Control-Allow-Headers', '*')
-    next()
-})
 
 app.post('/createClinic', async (request, response) => {
     let healthgainzClient = new Client(healthgainzConfig)

@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>HealthGainz Rest API Test Page</title>
+        <style>
+            #output {
+                margin-top: 1em;
+                width: 100%;
+                height: 50vh;
+            }
+        </style>
+        <script>
+            function testButtonClick() {
+                let login = {username: 'jbloggs@abc.com', password: 'pass'}
+                let xhr = new XMLHttpRequest()
+                xhr.onload = () => {
+                    if (xhr.status == 200) {
+                        document.getElementById('output').innerHTML = xhr.responseText
+                    }
+                    else {
+                        alert(xhr.responseText)
+                    }
+                }
+                xhr.onerror = () => {
+                    alert(xhr.responseText)
+                }
+                xhr.open('POST', 'http://ec2-34-244-198-141.eu-west-1.compute.amazonaws.com:3001/getUserByEmailAddressAndPassword')
+                xhr.setRequestHeader('Content-Type', 'application/json')
+                xhr.send(JSON.stringify(login))
+            }
+        </script>
+    </head>
+    <body>
+        <h1>HealthGainz Rest API Test Page</h1>
+        <button onclick="testButtonClick()">Test</button><br>
+        <textarea id="output"></textarea>
+    </body>
+</html>
