@@ -140,7 +140,7 @@ app.get('/getClientsByTherapistAndNameContains', (request, response) => {
     let query = request.query
     let value = query.value
     if (!value) { handleError(response, 'Value required'); return }
-    let sql = clientSelectSQL + ' WHERE client.therapistid = $1 AND name ILIKE $2'
+    let sql = clientSelectSQL + ' WHERE client.therapistid = $1 AND "user".name ILIKE $2'
     doFilterQuery(sql, [query.therapistid, '%' + value + '%'], request, response)
 })
 
