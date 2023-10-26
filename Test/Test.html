@@ -1,21 +1,41 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title>HealthGainz Rest API Test Page</title>
+        <title>Rest API Test Page</title>
         <style>
-            #output {
+            #url {
                 margin-top: 1em;
                 width: 100%;
-                height: 50vh;
+            }
+            #json {
+                margin-top: 1em;
+                margin-bottom: 1em;
+                width: 100%;
+            }
+            #username {
+                margin-right: 2em;
+            }
+            button {
+                margin-top: 2em;
+            }
+            #output {
+                margin-top: 2em;
+                width: 100%;
             }
         </style>
         <script>
             function testButtonClick() {
-                let login = {username: 'jbloggs@abc.com', password: 'pass'}
+                let method = document.getElementById('method').value
+                let url = document.getElementById('url').value
+                let json = document.getElementById('json').value
+                let username = document.getElementById('username').value
+                let password = document.getElementById('password').value
                 let xhr = new XMLHttpRequest()
                 xhr.onload = () => {
                     if (xhr.status == 200) {
-                        document.getElementById('output').innerHTML = xhr.responseText
+                        let output = document.getElementById('output')
+                        output.innerHTML = xhr.responseText
+                        output.focus()
                     }
                     else {
                         alert(xhr.responseText)
@@ -24,15 +44,31 @@
                 xhr.onerror = () => {
                     alert(xhr.responseText)
                 }
-                xhr.open('POST', 'http://ec2-34-244-198-141.eu-west-1.compute.amazonaws.com:3001/getUserByEmailAddressAndPassword')
+                xhr.open(method, url)
+                xhr.setRequestHeader('Authorization', username + ':' + password)
                 xhr.setRequestHeader('Content-Type', 'application/json')
-                xhr.send(JSON.stringify(login))
+                if (method == 'GET') xhr.send()
+                else xhr.send(json)
+            }
+            function outputBlur() {
+                document.getElementById('output').innerHTML = ''
             }
         </script>
     </head>
     <body>
-        <h1>HealthGainz Rest API Test Page</h1>
+        <h1>Rest API Test Page</h1>
+        <label>Method:</label>
+        <select id="method">
+            <option value="GET">GET</option>
+            <option value="POST">POST</option>
+        </select>
+        <input id="url" type="text" placeholder="Enter URL here">
+        <textarea id="json" rows="3" placeholder="Enter JSON input here (optional)"></textarea>
+        <label>Username:</label>
+        <input id="username" type="text">
+        <label>Password:</label>
+        <input id="password" type="password"><br>
         <button onclick="testButtonClick()">Test</button><br>
-        <textarea id="output"></textarea>
+        <textarea id="output" rows="20" placeholder="Output" onblur="outputBlur()"></textarea>
     </body>
 </html>
