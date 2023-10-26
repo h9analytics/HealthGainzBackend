@@ -1,4 +1,4 @@
--- Version 1
+-- version 1
 
 CREATE TABLE "user" (
     id BIGINT GENERATED ALWAYS AS IDENTITY,
@@ -98,3 +98,15 @@ CREATE TABLE clientplaylist (
 );
 
 INSERT INTO "user" VALUES (DEFAULT, 'Jo Bloggs', '1 Silica Way', '1234', 'jbloggs@abc.com', 'pass', ARRAY['Administrator']);
+
+-- version 2
+
+CREATE TABLE video (
+    id BIGINT GENERATED ALWAYS AS IDENTITY,
+    clientid BIGINT NOT NULL,
+    title TEXT NOT NULL,
+    datetimecreated TIMESTAMP NOT NULL,
+    url TEXT NOT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (clientid) REFERENCES client (id) ON DELETE CASCADE
+);
