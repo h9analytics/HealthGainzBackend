@@ -4,8 +4,8 @@ exports.healthgainzConfig = {
     host: 'localhost',
     port: '5432',
     database: 'healthgainz',
-    user: 'postgres',
-    password: 'MwuKjaPre1'
+    user: 'healthgainz',
+    password: 'NlaFteSzo1'
 }
 
 exports.checkCredentials = async (request, roles, healthgainzClient) => {
