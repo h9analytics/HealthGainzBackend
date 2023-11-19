@@ -1,4 +1,4 @@
-// version 1
+// version 2
 
 const { Client } = require('pg')
 const types = require('pg').types
@@ -31,7 +31,7 @@ const doFilterQuery = async (sql, values, request, response) => {
     let healthgainzClient = new Client(healthgainzConfig)
     try {
         await healthgainzClient.connect()
-        await checkCredentials(request, ['Administrator', 'Therapist', 'Client'], healthgainzClient)
+        await checkCredentials(request, ['Administrator', 'Therapist', 'Patient'], healthgainzClient)
         let result = values.length ? await healthgainzClient.query(sql, values) : await healthgainzClient.query(sql)
         response.writeHead(200, {'Content-Type': 'application/json'})
         response.end(JSON.stringify(result.rows))
@@ -52,7 +52,7 @@ app.post('/createVideo', async (request, response) => {
     let healthgainzClient = new Client(healthgainzConfig)
     try {
         await healthgainzClient.connect()
-		await checkCredentials(request, ['Administrator', 'Therapist', 'Client'], healthgainzClient)
+		await checkCredentials(request, ['Administrator', 'Therapist', 'Patient'], healthgainzClient)
         let result = await healthgainzClient.query('INSERT INTO video VALUES (DEFAULT, $1, $2, $3, $4) RETURNING *', Object.values(request.body))
 		response.writeHead(200, {'Content-Type': 'application/json'})
         response.end(JSON.stringify(result.rows[0]))
@@ -69,8 +69,8 @@ app.post('/updateVideo', async (request, response) => {
     let healthgainzClient = new Client(healthgainzConfig)
     try {
         await healthgainzClient.connect()
-		await checkCredentials(request, ['Administrator', 'Therapist', 'Client'], healthgainzClient)
-        let result = await healthgainzClient.query('UPDATE video SET clientid = $2, title = $3, datetimecreated = $4, url = $5 WHERE id = $1 RETURNING *', Object.values(request.body))
+		await checkCredentials(request, ['Administrator', 'Therapist', 'Patient'], healthgainzClient)
+        let result = await healthgainzClient.query('UPDATE video SET patientid = $2, title = $3, datetimecreated = $4, url = $5 WHERE id = $1 RETURNING *', Object.values(request.body))
 		response.writeHead(200, {'Content-Type': 'application/json'})
         response.end(JSON.stringify(result.rows[0]))
     }
@@ -86,7 +86,7 @@ app.get('/deleteVideo', async (request, response) => {
     let healthgainzClient = new Client(healthgainzConfig)
     try {
         await healthgainzClient.connect()
-		await checkCredentials(request, ['Administrator', 'Therapist', 'Client'], healthgainzClient)
+		await checkCredentials(request, ['Administrator', 'Therapist', 'Patient'], healthgainzClient)
         await healthgainzClient.query('DELETE FROM video WHERE id = $1', [request.query.id])
         response.writeHead(200)
         response.end()
@@ -103,7 +103,7 @@ app.get('/getVideoById', async (request, response) => {
     let healthgainzClient = new Client(healthgainzConfig)
     try {
         await healthgainzClient.connect()
-		await checkCredentials(request, ['Administrator', 'Therapist', 'Client'], healthgainzClient)
+		await checkCredentials(request, ['Administrator', 'Therapist', 'Patient'], healthgainzClient)
         let result = await healthgainzClient.query('SELECT * FROM video WHERE id = $1', [request.query.id])
         if (result.rows.length == 0) throw new Error('Video not found')
 		else {
@@ -119,12 +119,12 @@ app.get('/getVideoById', async (request, response) => {
     }
 })
 
-app.get('/getVideosByClient', async (request, response) => {
+app.get('/getVideosByPatient', async (request, response) => {
     let healthgainzClient = new Client(healthgainzConfig)
     try {
         await healthgainzClient.connect()
-		await checkCredentials(request, ['Administrator', 'Therapist', 'Client'], healthgainzClient)
-        let result = await healthgainzClient.query(videoSelectSQL + ' WHERE clientid = $1', [request.query.clientid])
+		await checkCredentials(request, ['Administrator', 'Therapist', 'Patient'], healthgainzClient)
+        let result = await healthgainzClient.query(videoSelectSQL + ' WHERE patientid = $1', [request.query.patientid])
         response.writeHead(200, {'Content-Type': 'application/json'})
         response.end(JSON.stringify(result.rows))
     }
@@ -136,83 +136,100 @@ app.get('/getVideosByClient', async (request, response) => {
     }
 })
 
-app.get('/getVideosByClientAndTitleContains', (request, response) => {
+app.get('/getInitialVideosByPatient', async (request, response) => {
+    let healthgainzClient = new Client(healthgainzConfig)
+    try {
+        await healthgainzClient.connect()
+		await checkCredentials(request, ['Administrator', 'Therapist', 'Patient'], healthgainzClient)
+        let result = await healthgainzClient.query(videoSelectSQL + ' WHERE patientid = $1 LIMIT 10', [request.query.patientid])
+        response.writeHead(200, {'Content-Type': 'application/json'})
+        response.end(JSON.stringify(result.rows))
+    }
+    catch (error) {
+        handleError(response, error.message)
+    }
+    finally {
+        await healthgainzClient.end()
+    }
+})
+
+app.get('/getVideosByPatientAndTitleContains', (request, response) => {
     let query = request.query
     let value = query.value
     if (!value) { handleError(response, 'Value required'); return }
-    let sql = videoSelectSQL + ' WHERE clientid = $1 AND title ILIKE $2'
-    doFilterQuery(sql, [query.clientid, '%' + value + '%'], request, response)
+    let sql = videoSelectSQL + ' WHERE patientid = $1 AND title ILIKE $2'
+    doFilterQuery(sql, [query.patientid, '%' + value + '%'], request, response)
 })
 
-app.get('/getVideosByClientAndTitleEmpty', (request, response) => {
-    let sql = videoSelectSQL + ' WHERE clientid = $1 AND title IS NULL'
-    doFilterQuery(sql, [request.query.clientid], request, response)
+app.get('/getVideosByPatientAndTitleEmpty', (request, response) => {
+    let sql = videoSelectSQL + ' WHERE patientid = $1 AND title IS NULL'
+    doFilterQuery(sql, [request.query.patientid], request, response)
 })
 
-app.get('/getVideosByClientAndTitleNotEmpty', (request, response) => {
-    let sql = videoSelectSQL + ' WHERE clientid = $1 AND title IS NOT NULL'
-    doFilterQuery(sql, [request.query.clientid], request, response)
+app.get('/getVideosByPatientAndTitleNotEmpty', (request, response) => {
+    let sql = videoSelectSQL + ' WHERE patientid = $1 AND title IS NOT NULL'
+    doFilterQuery(sql, [request.query.patientid], request, response)
 })
 
-app.get('/getVideosByClientAndDateTimeCreatedBefore', (request, response) => {
+app.get('/getVideosByPatientAndDateTimeCreatedBefore', (request, response) => {
     let query = request.query
     let value = query.value
     if (!value) { handleError(response, 'Value required'); return }
-    let sql = videoSelectSQL + ' WHERE clientid = $1 AND datetimecreated < $2'
-    doFilterQuery(sql, [query.clientid, value], request, response)
+    let sql = videoSelectSQL + ' WHERE patientid = $1 AND datetimecreated < $2'
+    doFilterQuery(sql, [query.patientid, value], request, response)
 })
 
-app.get('/getVideosByClientAndDateTimeCreatedEquals', (request, response) => {
+app.get('/getVideosByPatientAndDateTimeCreatedEquals', (request, response) => {
     let query = request.query
     let value = query.value
     if (!value) { handleError(response, 'Value required'); return }
-    let sql = videoSelectSQL + ' WHERE clientid = $1 AND datetimecreated = $2'
-    doFilterQuery(sql, [query.clientid, value], request, response)
+    let sql = videoSelectSQL + ' WHERE patientid = $1 AND datetimecreated = $2'
+    doFilterQuery(sql, [query.patientid, value], request, response)
 })
 
-app.get('/getVideosByClientAndDateTimeCreatedAfter', (request, response) => {
+app.get('/getVideosByPatientAndDateTimeCreatedAfter', (request, response) => {
     let query = request.query
     let value = query.value
     if (!value) { handleError(response, 'Value required'); return }
-    let sql = videoSelectSQL + ' WHERE clientid = $1 AND datetimecreated > $2'
-    doFilterQuery(sql, [query.clientid, value], request, response)
+    let sql = videoSelectSQL + ' WHERE patientid = $1 AND datetimecreated > $2'
+    doFilterQuery(sql, [query.patientid, value], request, response)
 })
 
-app.get('/getVideosByClientAndDateTimeCreatedBetween', (request, response) => {
+app.get('/getVideosByPatientAndDateTimeCreatedBetween', (request, response) => {
     let query = request.query
     let value1 = query.value1
     let value2 = query.value2
     if (!value1 || !value2) { handleError(response, 'Two values required'); return }
-    let sql = videoSelectSQL + ' WHERE clientid = $1 AND datetimecreated BETWEEN $2 AND $3'
-    doFilterQuery(sql, [query.clientid, value1, value2], request, response)
+    let sql = videoSelectSQL + ' WHERE patientid = $1 AND datetimecreated BETWEEN $2 AND $3'
+    doFilterQuery(sql, [query.patientid, value1, value2], request, response)
 })
 
-app.get('/getVideosByClientAndDateTimeCreatedEmpty', (request, response) => {
-    let sql = videoSelectSQL + ' WHERE clientid = $1 AND datetimecreated IS NULL'
-    doFilterQuery(sql, [request.query.clientid], request, response)
+app.get('/getVideosByPatientAndDateTimeCreatedEmpty', (request, response) => {
+    let sql = videoSelectSQL + ' WHERE patientid = $1 AND datetimecreated IS NULL'
+    doFilterQuery(sql, [request.query.patientid], request, response)
 })
 
-app.get('/getVideosByClientAndDateTimeCreatedNotEmpty', (request, response) => {
-    let sql = videoSelectSQL + ' WHERE clientid = $1 AND datetimecreated IS NOT NULL'
-    doFilterQuery(sql, [request.query.clientid], request, response)
+app.get('/getVideosByPatientAndDateTimeCreatedNotEmpty', (request, response) => {
+    let sql = videoSelectSQL + ' WHERE patientid = $1 AND datetimecreated IS NOT NULL'
+    doFilterQuery(sql, [request.query.patientid], request, response)
 })
 
-app.get('/getVideosByClientAndURLContains', (request, response) => {
+app.get('/getVideosByPatientAndURLContains', (request, response) => {
     let query = request.query
     let value = query.value
     if (!value) { handleError(response, 'Value required'); return }
-    let sql = videoSelectSQL + ' WHERE clientid = $1 AND url ILIKE $2'
-    doFilterQuery(sql, [query.clientid, '%' + value + '%'], request, response)
+    let sql = videoSelectSQL + ' WHERE patientid = $1 AND url ILIKE $2'
+    doFilterQuery(sql, [query.patientid, '%' + value + '%'], request, response)
 })
 
-app.get('/getVideosByClientAndURLEmpty', (request, response) => {
-    let sql = videoSelectSQL + ' WHERE clientid = $1 AND url IS NULL'
-    doFilterQuery(sql, [request.query.clientid], request, response)
+app.get('/getVideosByPatientAndURLEmpty', (request, response) => {
+    let sql = videoSelectSQL + ' WHERE patientid = $1 AND url IS NULL'
+    doFilterQuery(sql, [request.query.patientid], request, response)
 })
 
-app.get('/getVideosByClientAndURLNotEmpty', (request, response) => {
-    let sql = videoSelectSQL + ' WHERE clientid = $1 AND url IS NOT NULL'
-    doFilterQuery(sql, [request.query.clientid], request, response)
+app.get('/getVideosByPatientAndURLNotEmpty', (request, response) => {
+    let sql = videoSelectSQL + ' WHERE patientid = $1 AND url IS NOT NULL'
+    doFilterQuery(sql, [request.query.patientid], request, response)
 })
 
 app.listen(3010, () => {

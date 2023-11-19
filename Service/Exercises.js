@@ -31,7 +31,7 @@ const doFilterQuery = async (sql, values, request, response) => {
     let healthgainzClient = new Client(healthgainzConfig)
     try {
         await healthgainzClient.connect()
-        await checkCredentials(request, ['Administrator', 'Therapist', 'Client'], healthgainzClient)
+        await checkCredentials(request, ['Administrator', 'Therapist', 'Patient'], healthgainzClient)
         let result = values.length ? await healthgainzClient.query(sql, values) : await healthgainzClient.query(sql)
         response.writeHead(200, {'Content-Type': 'application/json'})
         response.end(JSON.stringify(result.rows))
@@ -103,7 +103,7 @@ app.get('/getExerciseById', async (request, response) => {
     let healthgainzClient = new Client(healthgainzConfig)
     try {
         await healthgainzClient.connect()
-		await checkCredentials(request, ['Administrator', 'Therapist', 'Client'], healthgainzClient)
+		await checkCredentials(request, ['Administrator', 'Therapist', 'Patient'], healthgainzClient)
         let result = await healthgainzClient.query(exerciseSelectSQL + ' WHERE id = $1', [request.query.id])
         if (result.rows.length == 0) throw new Error('Exercise not found')
 		else {
@@ -123,8 +123,25 @@ app.get('/getExercises', async (request, response) => {
     let healthgainzClient = new Client(healthgainzConfig)
     try {
         await healthgainzClient.connect()
-		await checkCredentials(request, ['Administrator', 'Therapist', 'Client'], healthgainzClient)
+		await checkCredentials(request, ['Administrator', 'Therapist', 'Patient'], healthgainzClient)
         let result = await healthgainzClient.query(exerciseSelectSQL)
+        response.writeHead(200, {'Content-Type': 'application/json'})
+        response.end(JSON.stringify(result.rows))
+    }
+    catch (error) {
+        handleError(response, error.message)
+    }
+    finally {
+        await healthgainzClient.end()
+    }
+})
+
+app.get('/getInitialExercises', async (request, response) => {
+    let healthgainzClient = new Client(healthgainzConfig)
+    try {
+        await healthgainzClient.connect()
+		await checkCredentials(request, ['Administrator', 'Therapist', 'Patient'], healthgainzClient)
+        let result = await healthgainzClient.query(exerciseSelectSQL + ' LIMIT 10')
         response.writeHead(200, {'Content-Type': 'application/json'})
         response.end(JSON.stringify(result.rows))
     }

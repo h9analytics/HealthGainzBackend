@@ -136,6 +136,23 @@ app.get('/getTherapistsByClinic', async (request, response) => {
     }
 })
 
+app.get('/getInitialTherapistsByClinic', async (request, response) => {
+    let healthgainzClient = new Client(healthgainzConfig)
+    try {
+        await healthgainzClient.connect()
+		await checkCredentials(request, ['Administrator'], healthgainzClient)
+        let result = await healthgainzClient.query(therapistSelectSQL + ' WHERE therapist.clinicid = $1 LIMIT 10', [request.query.clinicid])
+        response.writeHead(200, {'Content-Type': 'application/json'})
+        response.end(JSON.stringify(result.rows))
+    }
+    catch (error) {
+        handleError(response, error.message)
+    }
+    finally {
+        await healthgainzClient.end()
+    }
+})
+
 app.get('/getTherapistsByClinicAndNameContains', (request, response) => {
     let query = request.query
     let value = query.value

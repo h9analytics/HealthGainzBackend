@@ -1,4 +1,4 @@
--- version 1
+-- version 3
 
 CREATE TABLE "user" (
     id BIGINT GENERATED ALWAYS AS IDENTITY,
@@ -10,7 +10,7 @@ CREATE TABLE "user" (
 	roles TEXT ARRAY NOT NULL,
     PRIMARY KEY (id),
     CONSTRAINT user_unique_emailaddress UNIQUE (emailaddress),
-	CONSTRAINT user_check_role_values CHECK (roles <@ ARRAY['Administrator', 'Therapist', 'Client'])
+	CONSTRAINT user_check_role_values CHECK (roles <@ ARRAY['Administrator', 'Therapist', 'StandInTherapist', 'Patient'])
 );
 
 CREATE TABLE clinic (
@@ -34,23 +34,33 @@ CREATE TABLE therapist (
     CONSTRAINT therapist_unique_userid UNIQUE (userid)
 );
 
-CREATE TABLE client (
+CREATE TABLE patient (
     id BIGINT GENERATED ALWAYS AS IDENTITY,
     userid BIGINT NOT NULL,
     therapistid BIGINT NOT NULL,
     dateofbirth DATE NOT NULL,
     PRIMARY KEY (id),
-    CONSTRAINT client_foreignkey_userid FOREIGN KEY (userid) REFERENCES "user" (id) ON DELETE CASCADE,
-    CONSTRAINT client_foreignkey_therapistid FOREIGN KEY (therapistid) REFERENCES therapist (id) ON DELETE RESTRICT,
-    CONSTRAINT client_unique_userid UNIQUE (userid)
+    CONSTRAINT patient_foreignkey_userid FOREIGN KEY (userid) REFERENCES "user" (id) ON DELETE CASCADE,
+    CONSTRAINT patient_foreignkey_therapistid FOREIGN KEY (therapistid) REFERENCES therapist (id) ON DELETE RESTRICT,
+    CONSTRAINT patient_unique_userid UNIQUE (userid)
 );
 
 CREATE TABLE appointment (
     id BIGINT GENERATED ALWAYS AS IDENTITY,
-    clientid BIGINT NOT NULL,
+    patientid BIGINT NOT NULL,
     datetime TIMESTAMP NOT NULL,
     PRIMARY KEY (id),
-    CONSTRAINT appointment_foreignkey_clientid FOREIGN KEY (clientid) REFERENCES client (id) ON DELETE CASCADE
+    CONSTRAINT appointment_foreignkey_patientid FOREIGN KEY (patientid) REFERENCES patient (id) ON DELETE CASCADE
+);
+
+CREATE TABLE video (
+    id BIGINT GENERATED ALWAYS AS IDENTITY,
+    patientid BIGINT NOT NULL,
+    title TEXT NOT NULL,
+    datetimecreated TIMESTAMP NOT NULL,
+    url TEXT NOT NULL,
+    PRIMARY KEY (id),
+    CONSTRAINT video_foreignkey_patientid FOREIGN KEY (patientid) REFERENCES patient (id) ON DELETE CASCADE
 );
 
 CREATE TABLE exercise (
@@ -86,26 +96,14 @@ CREATE TABLE playlistexercise (
     CONSTRAINT playlistexercise_unique_playlistid_exerciseid UNIQUE (playlistid, exerciseid)
 );
 
-CREATE TABLE clientplaylist (
+CREATE TABLE patientplaylist (
     id BIGINT GENERATED ALWAYS AS IDENTITY,
-    clientid BIGINT NOT NULL,
+    patientid BIGINT NOT NULL,
     playlistid BIGINT NOT NULL,
     PRIMARY KEY (id),
-    CONSTRAINT clientplaylist_foreignkey_clientid FOREIGN KEY (clientid) REFERENCES client (id) ON DELETE CASCADE,
-    CONSTRAINT clientplaylist_foreignkey_playlistid FOREIGN KEY (playlistid) REFERENCES playlist (id) ON DELETE CASCADE,
-    CONSTRAINT clientplaylist_unique_clientid_playlistid UNIQUE (clientid, playlistid)
+    CONSTRAINT patientplaylist_foreignkey_patientid FOREIGN KEY (patientid) REFERENCES patient (id) ON DELETE CASCADE,
+    CONSTRAINT patientplaylist_foreignkey_playlistid FOREIGN KEY (playlistid) REFERENCES playlist (id) ON DELETE CASCADE,
+    CONSTRAINT patientplaylist_unique_patientid_playlistid UNIQUE (patientid, playlistid)
 );
 
 INSERT INTO "user" VALUES (DEFAULT, 'Jo Bloggs', '1 Silica Way', '1234', 'jbloggs@abc.com', 'pass', ARRAY['Administrator']);
-
--- version 2
-
-CREATE TABLE video (
-    id BIGINT GENERATED ALWAYS AS IDENTITY,
-    clientid BIGINT NOT NULL,
-    title TEXT NOT NULL,
-    datetimecreated TIMESTAMP NOT NULL,
-    url TEXT NOT NULL,
-    PRIMARY KEY (id),
-    CONSTRAINT video_foreignkey_clientid FOREIGN KEY (clientid) REFERENCES client (id) ON DELETE CASCADE
-);

@@ -136,6 +136,23 @@ app.get('/getClinics', async (request, response) => {
     }
 })
 
+app.get('/getInitialClinics', async (request, response) => {
+    let healthgainzClient = new Client(healthgainzConfig)
+    try {
+        await healthgainzClient.connect()
+		await checkCredentials(request, ['Administrator'], healthgainzClient)
+        let result = await healthgainzClient.query(clinicSelectSQL + ' LIMIT 10')
+        response.writeHead(200, {'Content-Type': 'application/json'})
+        response.end(JSON.stringify(result.rows))
+    }
+    catch (error) {
+        handleError(response, error.message)
+    }
+    finally {
+        await healthgainzClient.end()
+    }
+})
+
 app.get('/getClinicsByNameContains', (request, response) => {
     let value = request.query.value
     if (!value) { handleError(response, 'Value required'); return }
