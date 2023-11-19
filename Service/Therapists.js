@@ -193,7 +193,7 @@ app.get('/getTherapistByUser', async (request, response) => {
     let healthgainzClient = new Client(healthgainzConfig)
     try {
         await healthgainzClient.connect()
-		await checkCredentials(request, ['Administrator', 'Therapist'], healthgainzClient)
+		await checkCredentials(request, ['Administrator', 'Therapist', 'StandInTherapist'], healthgainzClient)
         let result = await healthgainzClient.query(therapistSelectSQL + ' WHERE therapist.userid = $1', [request.query.userid])
         if (result.rows.length == 0) throw new Error('Therapist not found')
 		else {

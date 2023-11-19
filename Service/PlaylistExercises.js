@@ -31,7 +31,7 @@ const doFilterQuery = async (sql, values, request, response) => {
     let healthgainzClient = new Client(healthgainzConfig)
     try {
         await healthgainzClient.connect()
-        await checkCredentials(request, ['Administrator', 'Therapist', 'Patient'], healthgainzClient)
+        await checkCredentials(request, ['Administrator', 'Therapist', 'StandInTherapist', 'Patient'], healthgainzClient)
         let result = values.length ? await healthgainzClient.query(sql, values) : await healthgainzClient.query(sql)
         response.writeHead(200, {'Content-Type': 'application/json'})
         response.end(JSON.stringify(result.rows))
@@ -52,7 +52,7 @@ app.post('/createPlaylistExercise', async (request, response) => {
     let healthgainzClient = new Client(healthgainzConfig)
     try {
         await healthgainzClient.connect()
-		await checkCredentials(request, ['Administrator', 'Therapist'], healthgainzClient)
+		await checkCredentials(request, ['Administrator', 'Therapist', 'StandInTherapist'], healthgainzClient)
         let result = await healthgainzClient.query('INSERT INTO playlistexercise VALUES (DEFAULT, $1, $2) RETURNING *', Object.values(request.body))
 		response.writeHead(200, {'Content-Type': 'application/json'})
         response.end(JSON.stringify(result.rows[0]))
@@ -69,7 +69,7 @@ app.post('/updatePlaylistExercise', async (request, response) => {
     let healthgainzClient = new Client(healthgainzConfig)
     try {
         await healthgainzClient.connect()
-		await checkCredentials(request, ['Administrator', 'Therapist'], healthgainzClient)
+		await checkCredentials(request, ['Administrator', 'Therapist', 'StandInTherapist'], healthgainzClient)
         let result = await healthgainzClient.query('UPDATE playlistexercise SET playlistid = $2, exerciseid = $3 WHERE id = $1 RETURNING *', Object.values(request.body))
 		response.writeHead(200, {'Content-Type': 'application/json'})
         response.end(JSON.stringify(result.rows[0]))
@@ -86,7 +86,7 @@ app.get('/deletePlaylistExercise', async (request, response) => {
     let healthgainzClient = new Client(healthgainzConfig)
     try {
         await healthgainzClient.connect()
-		await checkCredentials(request, ['Administrator', 'Therapist'], healthgainzClient)
+		await checkCredentials(request, ['Administrator', 'Therapist', 'StandInTherapist'], healthgainzClient)
         await healthgainzClient.query('DELETE FROM playlistexercise WHERE id = $1', [request.query.id])
         response.writeHead(200)
         response.end()
@@ -103,7 +103,7 @@ app.get('/getPlaylistExerciseById', async (request, response) => {
     let healthgainzClient = new Client(healthgainzConfig)
     try {
         await healthgainzClient.connect()
-		await checkCredentials(request, ['Administrator', 'Therapist', 'Patient'], healthgainzClient)
+		await checkCredentials(request, ['Administrator', 'Therapist', 'StandInTherapist', 'Patient'], healthgainzClient)
         let result = await healthgainzClient.query(playlistExerciseSelectSQL + ' WHERE playlistexercise.id = $1', [request.query.id])
         if (result.rows.length == 0) throw new Error('PlaylistExercise not found')
 		else {
@@ -123,7 +123,7 @@ app.get('/getPlaylistExercisesByPlaylist', async (request, response) => {
     let healthgainzClient = new Client(healthgainzConfig)
     try {
         await healthgainzClient.connect()
-		await checkCredentials(request, ['Administrator', 'Therapist', 'Patient'], healthgainzClient)
+		await checkCredentials(request, ['Administrator', 'Therapist', 'StandInTherapist', 'Patient'], healthgainzClient)
         let result = await healthgainzClient.query(playlistExerciseSelectSQL + ' WHERE playlistexercise.playlistid = $1', [request.query.playlistid])
         response.writeHead(200, {'Content-Type': 'application/json'})
         response.end(JSON.stringify(result.rows))
@@ -140,7 +140,7 @@ app.get('/getInitialPlaylistExercisesByPlaylist', async (request, response) => {
     let healthgainzClient = new Client(healthgainzConfig)
     try {
         await healthgainzClient.connect()
-		await checkCredentials(request, ['Administrator', 'Therapist', 'Patient'], healthgainzClient)
+		await checkCredentials(request, ['Administrator', 'Therapist', 'StandInTherapist', 'Patient'], healthgainzClient)
         let result = await healthgainzClient.query(playlistExerciseSelectSQL + ' WHERE playlistexercise.playlistid = $1 LIMIT 10', [request.query.playlistid])
         response.writeHead(200, {'Content-Type': 'application/json'})
         response.end(JSON.stringify(result.rows))
