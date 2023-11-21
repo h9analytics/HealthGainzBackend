@@ -1,11 +1,10 @@
-// version 2
-
 const { Client } = require('pg')
 const types = require('pg').types
 const express = require('express')
 const cors = require('cors')
+const https = require('https')
 
-const { healthgainzConfig, checkCredentials, handleError } = require('./HealthGainzLibrary')
+const { key, cert, healthgainzConfig, checkCredentials, handleError } = require('./HealthGainzLibrary')
 
 const appointmentSelectSQL = 'SELECT * FROM appointment'
 
@@ -196,8 +195,8 @@ app.get('/getAppointmentsByPatientAndDateTimeNotEmpty', (request, response) => {
     doFilterQuery(sql, [request.query.patientid], request, response)
 })
 
-app.listen(3005, () => {
-    console.log('Microservice \'HealthGainz:Appointments\' running on port 3005')
+let port = 3005
+let httpsServer = https.createServer({key, cert}, app)
+httpsServer.listen(port, () => {
+    console.log('Microservice \'HealthGainz:Appointments\' running on port ' + port)
 })
-
-module.exports = app

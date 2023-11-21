@@ -1,11 +1,10 @@
-// version 1
-
 const { Client } = require('pg')
 const types = require('pg').types
 const express = require('express')
 const cors = require('cors')
+const https = require('https')
 
-const { healthgainzConfig, checkCredentials, handleError } = require('./HealthGainzLibrary')
+const { key, cert, healthgainzConfig, checkCredentials, handleError } = require('./HealthGainzLibrary')
 
 const playlistExerciseSelectSQL = 'SELECT exercise.name AS exercisename, exercise.description AS exercisedescription, playlistexercise.* FROM playlistexercise JOIN exercise ON playlistexercise.exerciseid = exercise.id'
 
@@ -189,8 +188,8 @@ app.get('/getPlaylistExercisesByPlaylistAndDescriptionNotEmpty', (request, respo
     doFilterQuery(sql, [request.query.playlistid], request, response)
 })
 
-app.listen(3008, () => {
-    console.log('Microservice \'HealthGainz:PlaylistExercises\' running on port 3008')
+let port = 3008
+let httpsServer = https.createServer({key, cert}, app)
+httpsServer.listen(port, () => {
+    console.log('Microservice \'HealthGainz:PlaylistExercises\' running on port ' + port)
 })
-
-module.exports = app

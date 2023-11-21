@@ -1,11 +1,10 @@
-// version 1
-
 const { Client } = require('pg')
 const types = require('pg').types
 const express = require('express')
 const cors = require('cors')
+const https = require('https')
 
-const { healthgainzConfig, checkCredentials, handleError } = require('./HealthGainzLibrary')
+const { key, cert, healthgainzConfig, checkCredentials, handleError } = require('./HealthGainzLibrary')
 
 const exerciseSelectSQL = 'SELECT * FROM exercise'
 
@@ -324,8 +323,8 @@ app.get('/getExercisesByVideoURLNotEmpty', (request, response) => {
     doFilterQuery(sql, [], request, response)
 })
 
-app.listen(3006, () => {
-    console.log('Microservice \'HealthGainz:Exercises\' running on port 3006')
+let port = 3006
+let httpsServer = https.createServer({key, cert}, app)
+httpsServer.listen(port, () => {
+    console.log('Microservice \'HealthGainz:Exercises\' running on port ' + port)
 })
-
-module.exports = app

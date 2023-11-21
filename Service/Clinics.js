@@ -1,11 +1,10 @@
-// version 1
-
 const { Client } = require('pg')
 const types = require('pg').types
 const express = require('express')
 const cors = require('cors')
+const https = require('https')
 
-const { healthgainzConfig, checkCredentials, handleError } = require('./HealthGainzLibrary')
+const { key, cert, healthgainzConfig, checkCredentials, handleError } = require('./HealthGainzLibrary')
 
 const clinicSelectSQL = 'SELECT * FROM clinic'
 
@@ -31,7 +30,7 @@ const doFilterQuery = async (sql, values, request, response) => {
     let healthgainzClient = new Client(healthgainzConfig)
     try {
         await healthgainzClient.connect()
-        await checkCredentials(request, ['Administrator'], healthgainzClient)
+        await checkCredentials(request, ['Administrator', 'StandInTherapist'], healthgainzClient)
         let result = values.length ? await healthgainzClient.query(sql, values) : await healthgainzClient.query(sql)
         response.writeHead(200, {'Content-Type': 'application/json'})
         response.end(JSON.stringify(result.rows))
@@ -103,7 +102,7 @@ app.get('/getClinicById', async (request, response) => {
     let healthgainzClient = new Client(healthgainzConfig)
     try {
         await healthgainzClient.connect()
-		await checkCredentials(request, ['Administrator'], healthgainzClient)
+		await checkCredentials(request, ['Administrator', 'StandInTherapist'], healthgainzClient)
         let result = await healthgainzClient.query(clinicSelectSQL + ' WHERE id = $1', [request.query.id])
         if (result.rows.length == 0) throw new Error('Clinic not found')
 		else {
@@ -123,7 +122,7 @@ app.get('/getClinics', async (request, response) => {
     let healthgainzClient = new Client(healthgainzConfig)
     try {
         await healthgainzClient.connect()
-		await checkCredentials(request, ['Administrator'], healthgainzClient)
+		await checkCredentials(request, ['Administrator', 'StandInTherapist'], healthgainzClient)
         let result = await healthgainzClient.query(clinicSelectSQL)
         response.writeHead(200, {'Content-Type': 'application/json'})
         response.end(JSON.stringify(result.rows))
@@ -140,7 +139,7 @@ app.get('/getInitialClinics', async (request, response) => {
     let healthgainzClient = new Client(healthgainzConfig)
     try {
         await healthgainzClient.connect()
-		await checkCredentials(request, ['Administrator'], healthgainzClient)
+		await checkCredentials(request, ['Administrator', 'StandInTherapist'], healthgainzClient)
         let result = await healthgainzClient.query(clinicSelectSQL + ' LIMIT 10')
         response.writeHead(200, {'Content-Type': 'application/json'})
         response.end(JSON.stringify(result.rows))
@@ -221,8 +220,8 @@ app.get('/getClinicsByEmailAddressNotEmpty', (request, response) => {
     doFilterQuery(sql, [], request, response)
 })
 
-app.listen(3002, () => {
-    console.log('Microservice \'HealthGainz:Clinics\' running on port 3002')
+let port = 3002
+let httpsServer = https.createServer({key, cert}, app)
+httpsServer.listen(port, () => {
+    console.log('Microservice \'HealthGainz:Clinics\' running on port ' + port)
 })
-
-module.exports = app

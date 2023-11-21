@@ -1,11 +1,10 @@
-// version 1
-
 const { Client } = require('pg')
 const types = require('pg').types
 const express = require('express')
 const cors = require('cors')
+const https = require('https')
 
-const { healthgainzConfig, checkCredentials, handleError } = require('./HealthGainzLibrary')
+const { key, cert, healthgainzConfig, checkCredentials, handleError } = require('./HealthGainzLibrary')
 
 const therapistSelectSQL = 'SELECT "user".name AS username, "user".address AS useraddress, therapist.* FROM therapist JOIN "user" ON therapist.userid = "user".id'
 
@@ -209,8 +208,8 @@ app.get('/getTherapistByUser', async (request, response) => {
     }
 })
 
-app.listen(3003, () => {
-    console.log('Microservice \'HealthGainz:Therapists\' running on port 3003')
+let port = 3003
+let httpsServer = https.createServer({key, cert}, app)
+httpsServer.listen(port, () => {
+    console.log('Microservice \'HealthGainz:Therapists\' running on port ' + port)
 })
-
-module.exports = app

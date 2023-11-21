@@ -1,4 +1,7 @@
-// version 1
+const fs = require('fs')
+
+exports.key = fs.readFileSync('privkey.pem')
+exports.cert = fs.readFileSync('fullchain.pem')
 
 exports.healthgainzConfig = {
     host: 'localhost',
