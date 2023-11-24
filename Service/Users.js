@@ -6,7 +6,7 @@ const https = require('https')
 
 const { key, cert, healthgainzConfig, checkCredentials, handleError } = require('./HealthGainzLibrary')
 
-const userSelectSQL = 'SELECT id, name, address, phonenumber, emailaddress, roles FROM "user"'
+const userSelectSQL = 'SELECT * FROM "user"'
 
 // the following type parsers are required for returning correct JSON
 
@@ -52,7 +52,7 @@ app.post('/createUser', async (request, response) => {
     try {
         await healthgainzClient.connect()
 		await checkCredentials(request, ['Administrator', 'Therapist', 'StandInTherapist'], healthgainzClient)
-		let result = await healthgainzClient.query('INSERT INTO "user" VALUES (DEFAULT, $1, $2, $3, $4, $5, $6) RETURNING id, name, address, phonenumber, emailaddress, roles', Object.values(request.body))
+		let result = await healthgainzClient.query('INSERT INTO "user" VALUES (DEFAULT, $1, $2, $3, $4, $5, $6) RETURNING *', Object.values(request.body))
 		response.writeHead(200, {'Content-Type': 'application/json'})
         response.end(JSON.stringify(result.rows[0]))
     }
@@ -69,7 +69,7 @@ app.post('/updateUser', async (request, response) => {
     try {
         await healthgainzClient.connect()
 		await checkCredentials(request, ['Administrator', 'Therapist', 'StandInTherapist'], healthgainzClient)
-        let result = await healthgainzClient.query('UPDATE "user" SET name = $2, address = $3, phonenumber = $4, emailaddress = $5, password = $6, roles = $7 WHERE id = $1 RETURNING id, name, address, phonenumber, emailaddress, roles', Object.values(request.body))
+        let result = await healthgainzClient.query('UPDATE "user" SET name = $2, address = $3, phonenumber = $4, emailaddress = $5, password = $6, roles = $7 WHERE id = $1 RETURNING *', Object.values(request.body))
 		response.writeHead(200, {'Content-Type': 'application/json'})
         response.end(JSON.stringify(result.rows[0]))
     }
@@ -224,7 +224,7 @@ app.post('/getUserByEmailAddressAndPassword', async (request, response) => {
     let healthgainzClient = new Client(healthgainzConfig)
     try {
         await healthgainzClient.connect()
-        let result = await healthgainzClient.query('SELECT * FROM "user" WHERE emailaddress = $1 AND password = $2', Object.values(request.body))
+        let result = await healthgainzClient.query(userSelectSQL + ' WHERE emailaddress = $1 AND password = $2', Object.values(request.body))
         if (result.rows.length == 0) throw new Error('User not found')
 		else {
 			response.writeHead(200, {'Content-Type': 'application/json'})
