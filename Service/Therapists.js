@@ -30,7 +30,7 @@ const doFilterQuery = async (sql, values, request, response) => {
     let healthgainzClient = new Client(healthgainzConfig)
     try {
         await healthgainzClient.connect()
-        await checkCredentials(request, ['Administrator'], healthgainzClient)
+        await checkCredentials(request, ['Administrator', 'StandInTherapist'], healthgainzClient)
         let result = values.length ? await healthgainzClient.query(sql, values) : await healthgainzClient.query(sql)
         response.writeHead(200, {'Content-Type': 'application/json'})
         response.end(JSON.stringify(result.rows))
@@ -102,7 +102,7 @@ app.get('/getTherapistById', async (request, response) => {
     let healthgainzClient = new Client(healthgainzConfig)
     try {
         await healthgainzClient.connect()
-		await checkCredentials(request, ['Administrator'], healthgainzClient)
+		await checkCredentials(request, ['Administrator', 'StandInTherapist'], healthgainzClient)
         let result = await healthgainzClient.query(therapistSelectSQL + ' WHERE therapist.id = $1', [request.query.id])
         if (result.rows.length == 0) throw new Error('Therapist not found')
 		else {
@@ -122,7 +122,7 @@ app.get('/getTherapistsByClinic', async (request, response) => {
     let healthgainzClient = new Client(healthgainzConfig)
     try {
         await healthgainzClient.connect()
-		await checkCredentials(request, ['Administrator'], healthgainzClient)
+		await checkCredentials(request, ['Administrator', 'StandInTherapist'], healthgainzClient)
         let result = await healthgainzClient.query(therapistSelectSQL + ' WHERE therapist.clinicid = $1', [request.query.clinicid])
         response.writeHead(200, {'Content-Type': 'application/json'})
         response.end(JSON.stringify(result.rows))
@@ -139,7 +139,7 @@ app.get('/getInitialTherapistsByClinic', async (request, response) => {
     let healthgainzClient = new Client(healthgainzConfig)
     try {
         await healthgainzClient.connect()
-		await checkCredentials(request, ['Administrator'], healthgainzClient)
+		await checkCredentials(request, ['Administrator', 'StandInTherapist'], healthgainzClient)
         let result = await healthgainzClient.query(therapistSelectSQL + ' WHERE therapist.clinicid = $1 LIMIT 10', [request.query.clinicid])
         response.writeHead(200, {'Content-Type': 'application/json'})
         response.end(JSON.stringify(result.rows))
