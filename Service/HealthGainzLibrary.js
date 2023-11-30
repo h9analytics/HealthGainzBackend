@@ -2,6 +2,8 @@ const fs = require('fs')
 
 exports.key = fs.readFileSync('privkey.pem')
 exports.cert = fs.readFileSync('fullchain.pem')
+exports.allRoles = ['Administrator', 'ClinicManager', 'Therapist', 'StandInTherapist', 'Patient']
+exports.staffRoles = ['Administrator', 'ClinicManager', 'Therapist', 'StandInTherapist']
 
 exports.healthgainzConfig = {
     host: 'localhost',

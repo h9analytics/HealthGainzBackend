@@ -30,7 +30,7 @@ const doFilterQuery = async (sql, values, request, response) => {
     let healthgainzClient = new Client(healthgainzConfig)
     try {
         await healthgainzClient.connect()
-        await checkCredentials(request, ['Administrator', 'StandInTherapist'], healthgainzClient)
+        await checkCredentials(request, ['Administrator'], healthgainzClient)
         let result = values.length ? await healthgainzClient.query(sql, values) : await healthgainzClient.query(sql)
         response.writeHead(200, {'Content-Type': 'application/json'})
         response.end(JSON.stringify(result.rows))
@@ -102,7 +102,7 @@ app.get('/getClinicById', async (request, response) => {
     let healthgainzClient = new Client(healthgainzConfig)
     try {
         await healthgainzClient.connect()
-		await checkCredentials(request, ['Administrator', 'StandInTherapist'], healthgainzClient)
+		await checkCredentials(request, ['Administrator'], healthgainzClient)
         let result = await healthgainzClient.query(clinicSelectSQL + ' WHERE id = $1', [request.query.id])
         if (result.rows.length == 0) throw new Error('Clinic not found')
 		else {
@@ -122,7 +122,7 @@ app.get('/getClinics', async (request, response) => {
     let healthgainzClient = new Client(healthgainzConfig)
     try {
         await healthgainzClient.connect()
-		await checkCredentials(request, ['Administrator', 'StandInTherapist'], healthgainzClient)
+		await checkCredentials(request, ['Administrator'], healthgainzClient)
         let result = await healthgainzClient.query(clinicSelectSQL)
         response.writeHead(200, {'Content-Type': 'application/json'})
         response.end(JSON.stringify(result.rows))
@@ -139,7 +139,7 @@ app.get('/getInitialClinics', async (request, response) => {
     let healthgainzClient = new Client(healthgainzConfig)
     try {
         await healthgainzClient.connect()
-		await checkCredentials(request, ['Administrator', 'StandInTherapist'], healthgainzClient)
+		await checkCredentials(request, ['Administrator'], healthgainzClient)
         let result = await healthgainzClient.query(clinicSelectSQL + ' LIMIT 10')
         response.writeHead(200, {'Content-Type': 'application/json'})
         response.end(JSON.stringify(result.rows))

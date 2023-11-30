@@ -4,7 +4,7 @@ const express = require('express')
 const cors = require('cors')
 const https = require('https')
 
-const { key, cert, healthgainzConfig, checkCredentials, handleError } = require('./HealthGainzLibrary')
+const { key, cert, allRoles, healthgainzConfig, checkCredentials, handleError } = require('./HealthGainzLibrary')
 
 const videoSelectSQL = 'SELECT * FROM video'
 
@@ -30,7 +30,7 @@ const doFilterQuery = async (sql, values, request, response) => {
     let healthgainzClient = new Client(healthgainzConfig)
     try {
         await healthgainzClient.connect()
-        await checkCredentials(request, ['Administrator', 'Therapist', 'StandInTherapist', 'Patient'], healthgainzClient)
+        await checkCredentials(request, allRoles, healthgainzClient)
         let result = values.length ? await healthgainzClient.query(sql, values) : await healthgainzClient.query(sql)
         response.writeHead(200, {'Content-Type': 'application/json'})
         response.end(JSON.stringify(result.rows))
@@ -51,7 +51,7 @@ app.post('/createVideo', async (request, response) => {
     let healthgainzClient = new Client(healthgainzConfig)
     try {
         await healthgainzClient.connect()
-		await checkCredentials(request, ['Administrator', 'Therapist', 'StandInTherapist', 'Patient'], healthgainzClient)
+		await checkCredentials(request, allRoles, healthgainzClient)
         let result = await healthgainzClient.query('INSERT INTO video VALUES (DEFAULT, $1, $2, $3, $4) RETURNING *', Object.values(request.body))
 		response.writeHead(200, {'Content-Type': 'application/json'})
         response.end(JSON.stringify(result.rows[0]))
@@ -68,7 +68,7 @@ app.post('/updateVideo', async (request, response) => {
     let healthgainzClient = new Client(healthgainzConfig)
     try {
         await healthgainzClient.connect()
-		await checkCredentials(request, ['Administrator', 'Therapist', 'StandInTherapist', 'Patient'], healthgainzClient)
+		await checkCredentials(request, allRoles, healthgainzClient)
         let result = await healthgainzClient.query('UPDATE video SET patientid = $2, title = $3, datetimecreated = $4, url = $5 WHERE id = $1 RETURNING *', Object.values(request.body))
 		response.writeHead(200, {'Content-Type': 'application/json'})
         response.end(JSON.stringify(result.rows[0]))
@@ -85,7 +85,7 @@ app.get('/deleteVideo', async (request, response) => {
     let healthgainzClient = new Client(healthgainzConfig)
     try {
         await healthgainzClient.connect()
-		await checkCredentials(request, ['Administrator', 'Therapist', 'StandInTherapist', 'Patient'], healthgainzClient)
+		await checkCredentials(request, allRoles, healthgainzClient)
         await healthgainzClient.query('DELETE FROM video WHERE id = $1', [request.query.id])
         response.writeHead(200)
         response.end()
@@ -102,7 +102,7 @@ app.get('/getVideoById', async (request, response) => {
     let healthgainzClient = new Client(healthgainzConfig)
     try {
         await healthgainzClient.connect()
-		await checkCredentials(request, ['Administrator', 'Therapist', 'StandInTherapist', 'Patient'], healthgainzClient)
+		await checkCredentials(request, allRoles, healthgainzClient)
         let result = await healthgainzClient.query('SELECT * FROM video WHERE id = $1', [request.query.id])
         if (result.rows.length == 0) throw new Error('Video not found')
 		else {
@@ -122,7 +122,7 @@ app.get('/getVideosByPatient', async (request, response) => {
     let healthgainzClient = new Client(healthgainzConfig)
     try {
         await healthgainzClient.connect()
-		await checkCredentials(request, ['Administrator', 'Therapist', 'StandInTherapist', 'Patient'], healthgainzClient)
+		await checkCredentials(request, allRoles, healthgainzClient)
         let result = await healthgainzClient.query(videoSelectSQL + ' WHERE patientid = $1', [request.query.patientid])
         response.writeHead(200, {'Content-Type': 'application/json'})
         response.end(JSON.stringify(result.rows))
@@ -139,7 +139,7 @@ app.get('/getInitialVideosByPatient', async (request, response) => {
     let healthgainzClient = new Client(healthgainzConfig)
     try {
         await healthgainzClient.connect()
-		await checkCredentials(request, ['Administrator', 'Therapist', 'StandInTherapist', 'Patient'], healthgainzClient)
+		await checkCredentials(request, allRoles, healthgainzClient)
         let result = await healthgainzClient.query(videoSelectSQL + ' WHERE patientid = $1 LIMIT 10', [request.query.patientid])
         response.writeHead(200, {'Content-Type': 'application/json'})
         response.end(JSON.stringify(result.rows))
