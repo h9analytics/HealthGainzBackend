@@ -4,7 +4,7 @@ const express = require('express')
 const cors = require('cors')
 const https = require('https')
 
-const { key, cert, staffRoles, healthgainzConfig, checkCredentials, handleError } = require('./HealthGainzLibrary')
+const { key, cert, healthgainzConfig, checkCredentials, handleError } = require('./HealthGainzLibrary')
 
 const staffMembersByClinicSQL = 'SELECT "user".name AS username, "user".address AS useraddress, staffmember.* FROM staffmember JOIN "user" ON staffmember.userid = "user".id'
 const staffMembersByUserSQL = 'SELECT clinic.name AS clinicname, clinic.address AS clinicaddress, staffmember.* FROM staffmember JOIN clinic ON staffmember.clinicid = clinic.id'
@@ -119,46 +119,29 @@ app.get('/getStaffMemberById', async (request, response) => {
     }
 })
 
-app.get('/getStaffMembersByClinic', async (request, response) => {
-    let healthgainzClient = new Client(healthgainzConfig)
-    try {
-        await healthgainzClient.connect()
-		await checkCredentials(request, ['Administrator', 'ClinicManager', 'StandInTherapist'], healthgainzClient)
-        let result = await healthgainzClient.query(staffMembersByClinicSQL + ' WHERE staffmember.clinicid = $1', [request.query.clinicid])
-        response.writeHead(200, {'Content-Type': 'application/json'})
-        response.end(JSON.stringify(result.rows))
-    }
-    catch (error) {
-        handleError(response, error.message)
-    }
-    finally {
-        await healthgainzClient.end()
-    }
-})
-
-app.get('/getStaffMembersByUser', async (request, response) => {
-    let healthgainzClient = new Client(healthgainzConfig)
-    try {
-        await healthgainzClient.connect()
-		await checkCredentials(request, ['Administrator', 'ClinicManager', 'StandInTherapist'], healthgainzClient)
-        let result = await healthgainzClient.query(staffMembersByUserSQL + ' WHERE staffmember.userid = $1', [request.query.userid])
-        response.writeHead(200, {'Content-Type': 'application/json'})
-        response.end(JSON.stringify(result.rows))
-    }
-    catch (error) {
-        handleError(response, error.message)
-    }
-    finally {
-        await healthgainzClient.end()
-    }
-})
-
 app.get('/getInitialStaffMembersByClinic', async (request, response) => {
     let healthgainzClient = new Client(healthgainzConfig)
     try {
         await healthgainzClient.connect()
 		await checkCredentials(request, ['Administrator', 'ClinicManager', 'StandInTherapist'], healthgainzClient)
         let result = await healthgainzClient.query(staffMembersByClinicSQL + ' WHERE staffmember.clinicid = $1 LIMIT 10', [request.query.clinicid])
+        response.writeHead(200, {'Content-Type': 'application/json'})
+        response.end(JSON.stringify(result.rows))
+    }
+    catch (error) {
+        handleError(response, error.message)
+    }
+    finally {
+        await healthgainzClient.end()
+    }
+})
+
+app.get('/getStaffMembersByClinic', async (request, response) => {
+    let healthgainzClient = new Client(healthgainzConfig)
+    try {
+        await healthgainzClient.connect()
+		await checkCredentials(request, ['Administrator', 'ClinicManager', 'StandInTherapist'], healthgainzClient)
+        let result = await healthgainzClient.query(staffMembersByClinicSQL + ' WHERE staffmember.clinicid = $1', [request.query.clinicid])
         response.writeHead(200, {'Content-Type': 'application/json'})
         response.end(JSON.stringify(result.rows))
     }
@@ -206,17 +189,14 @@ app.get('/getStaffMembersByClinicAndUserAddressNotEmpty', (request, response) =>
     doFilterQuery(sql, [request.query.clinicid], request, response)
 })
 
-app.get('/getStaffMemberByUser', async (request, response) => {
+app.get('/getStaffMembersByUser', async (request, response) => {
     let healthgainzClient = new Client(healthgainzConfig)
     try {
         await healthgainzClient.connect()
-		await checkCredentials(request, staffRoles, healthgainzClient)
-        let result = await healthgainzClient.query(staffMembersByClinicSQL + ' WHERE staffmember.userid = $1', [request.query.userid])
-        if (result.rows.length == 0) throw new Error('StaffMember not found')
-		else {
-			response.writeHead(200, {'Content-Type': 'application/json'})
-			response.end(JSON.stringify(result.rows[0]))
-		}
+		await checkCredentials(request, ['Administrator', 'ClinicManager', 'StandInTherapist'], healthgainzClient)
+        let result = await healthgainzClient.query(staffMembersByUserSQL + ' WHERE staffmember.userid = $1', [request.query.userid])
+        response.writeHead(200, {'Content-Type': 'application/json'})
+        response.end(JSON.stringify(result.rows))
     }
     catch (error) {
         handleError(response, error.message)
