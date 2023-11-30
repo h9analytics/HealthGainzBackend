@@ -1,5 +1,3 @@
--- version 3
-
 CREATE TABLE "user" (
     id BIGINT GENERATED ALWAYS AS IDENTITY,
     name TEXT NOT NULL,
@@ -10,7 +8,7 @@ CREATE TABLE "user" (
 	roles TEXT ARRAY NOT NULL,
     PRIMARY KEY (id),
     CONSTRAINT user_unique_emailaddress UNIQUE (emailaddress),
-	CONSTRAINT user_check_role_values CHECK (roles <@ ARRAY['Administrator', 'Therapist', 'StandInTherapist', 'Patient'])
+	CONSTRAINT user_check_role_values CHECK (roles <@ ARRAY['Administrator', 'ClinicManager', 'Therapist', 'StandInTherapist', 'Patient'])
 );
 
 CREATE TABLE clinic (
@@ -24,24 +22,24 @@ CREATE TABLE clinic (
     CONSTRAINT clinic_unique_address UNIQUE (address)
 );
 
-CREATE TABLE therapist (
+CREATE TABLE staffmember (
     id BIGINT GENERATED ALWAYS AS IDENTITY,
     userid BIGINT NOT NULL,
     clinicid BIGINT NOT NULL,
     PRIMARY KEY (id),
-    CONSTRAINT therapist_foreignkey_userid FOREIGN KEY (userid) REFERENCES "user" (id) ON DELETE RESTRICT,
-    CONSTRAINT therapist_foreignkey_clinicid FOREIGN KEY (clinicid) REFERENCES clinic (id) ON DELETE CASCADE,
-    CONSTRAINT therapist_unique_userid UNIQUE (userid)
+    CONSTRAINT staffmember_foreignkey_userid FOREIGN KEY (userid) REFERENCES "user" (id) ON DELETE RESTRICT,
+    CONSTRAINT staffmember_foreignkey_clinicid FOREIGN KEY (clinicid) REFERENCES clinic (id) ON DELETE CASCADE,
+    CONSTRAINT staffmember_unique_userid_clinicid UNIQUE (userid, clinicid)
 );
 
 CREATE TABLE patient (
     id BIGINT GENERATED ALWAYS AS IDENTITY,
     userid BIGINT NOT NULL,
-    therapistid BIGINT NOT NULL,
+    staffmemberid BIGINT NOT NULL,
     dateofbirth DATE NOT NULL,
     PRIMARY KEY (id),
     CONSTRAINT patient_foreignkey_userid FOREIGN KEY (userid) REFERENCES "user" (id) ON DELETE CASCADE,
-    CONSTRAINT patient_foreignkey_therapistid FOREIGN KEY (therapistid) REFERENCES therapist (id) ON DELETE RESTRICT,
+    CONSTRAINT patient_foreignkey_staffmemberid FOREIGN KEY (staffmemberid) REFERENCES staffmember (id) ON DELETE RESTRICT,
     CONSTRAINT patient_unique_userid UNIQUE (userid)
 );
 
