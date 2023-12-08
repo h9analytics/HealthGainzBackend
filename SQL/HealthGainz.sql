@@ -77,6 +77,16 @@ CREATE TABLE exercise (
     CONSTRAINT exercise_check_hold CHECK (hold >= 0)
 );
 
+ALTER TABLE exercise ADD COLUMN totalratings INTEGER NOT NULL DEFAULT 0;
+
+ALTER TABLE exercise ADD COLUMN averagerating NUMERIC(2, 1) NOT NULL DEFAULT 0.0;
+
+CREATE PROCEDURE addExerciseRating(exerciseid BIGINT, rating NUMERIC(2, 1))
+LANGUAGE SQL
+BEGIN ATOMIC
+    UPDATE exercise SET totalratings = totalratings + 1, averagerating = (totalratings * averagerating + rating) / (totalratings + 1) WHERE id = exerciseid;
+END;
+
 CREATE TABLE playlist (
     id BIGINT GENERATED ALWAYS AS IDENTITY,
     name TEXT NOT NULL,
