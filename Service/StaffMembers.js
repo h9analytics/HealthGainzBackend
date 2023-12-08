@@ -104,7 +104,7 @@ app.get('/getStaffMemberById', async (request, response) => {
     try {
         await healthgainzClient.connect()
 		await checkCredentials(request, ['Administrator', 'ClinicManager', 'StandInTherapist'], healthgainzClient)
-        let result = await healthgainzClient.query('SELECT * FROM staffmember WHERE id = $1', [request.query.id])
+        let result = await healthgainzClient.query(staffMembersByClinicSQL + ' WHERE staffmember.id = $1', [request.query.id])
         if (result.rows.length == 0) throw new Error('StaffMember not found')
 		else {
 			response.writeHead(200, {'Content-Type': 'application/json'})
