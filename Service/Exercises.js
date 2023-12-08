@@ -52,7 +52,7 @@ app.post('/createExercise', async (request, response) => {
     try {
         await healthgainzClient.connect()
 		await checkCredentials(request, staffRoles, healthgainzClient)
-        let result = await healthgainzClient.query('INSERT INTO exercise VALUES (DEFAULT, $1, $2, $3, $4, $5, $6) RETURNING *', Object.values(request.body))
+        let result = await healthgainzClient.query('INSERT INTO exercise VALUES (DEFAULT, $1, $2, $3, $4, $5, $6, DEFAULT, DEFAULT) RETURNING *', Object.values(request.body))
 		response.writeHead(200, {'Content-Type': 'application/json'})
         response.end(JSON.stringify(result.rows[0]))
     }
@@ -88,6 +88,24 @@ app.get('/deleteExercise', async (request, response) => {
 		await checkCredentials(request, staffRoles, healthgainzClient)
         await healthgainzClient.query('DELETE FROM exercise WHERE id = $1', [request.query.id])
         response.writeHead(200)
+        response.end()
+    }
+    catch (error) {
+        handleError(response, error.message)
+    }
+    finally {
+        await healthgainzClient.end()
+    }
+})
+
+app.get('/addExerciseRating', async (request, response) => {
+    let healthgainzClient = new Client(healthgainzConfig)
+    try {
+        await healthgainzClient.connect()
+		await checkCredentials(request, ['Patient'], healthgainzClient)
+        let query = request.query
+        await healthgainzClient.query('CALL addExerciseRating($1, $2)', [query.exerciseid, query.rating])
+		response.writeHead(200)
         response.end()
     }
     catch (error) {
