@@ -17,6 +17,7 @@ CREATE TABLE clinic (
     address TEXT NOT NULL,
     phonenumber TEXT NOT NULL,
     emailaddress TEXT NOT NULL,
+    logourl TEXT,
     PRIMARY KEY (id),
     CONSTRAINT clinic_unique_name UNIQUE (name),
     CONSTRAINT clinic_unique_address UNIQUE (address)

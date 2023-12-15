@@ -52,7 +52,7 @@ app.post('/createClinic', async (request, response) => {
     try {
         await healthgainzClient.connect()
 		await checkCredentials(request, ['Administrator'], healthgainzClient)
-        let result = await healthgainzClient.query('INSERT INTO clinic VALUES (DEFAULT, $1, $2, $3, $4) RETURNING *', Object.values(request.body))
+        let result = await healthgainzClient.query('INSERT INTO clinic VALUES (DEFAULT, $1, $2, $3, $4, $5) RETURNING *', Object.values(request.body))
 		response.writeHead(200, {'Content-Type': 'application/json'})
         response.end(JSON.stringify(result.rows[0]))
     }
@@ -69,7 +69,7 @@ app.post('/updateClinic', async (request, response) => {
     try {
         await healthgainzClient.connect()
 		await checkCredentials(request, ['Administrator'], healthgainzClient)
-        let result = await healthgainzClient.query('UPDATE clinic SET name = $2, address = $3, phonenumber = $4, emailaddress = $5 WHERE id = $1 RETURNING *', Object.values(request.body))
+        let result = await healthgainzClient.query('UPDATE clinic SET name = $2, address = $3, phonenumber = $4, emailaddress = $5, logourl = $6 WHERE id = $1 RETURNING *', Object.values(request.body))
 		response.writeHead(200, {'Content-Type': 'application/json'})
         response.end(JSON.stringify(result.rows[0]))
     }
@@ -217,6 +217,23 @@ app.get('/getClinicsByEmailAddressEmpty', (request, response) => {
 
 app.get('/getClinicsByEmailAddressNotEmpty', (request, response) => {
     let sql = clinicSelectSQL + ' WHERE emailaddress IS NOT NULL'
+    doFilterQuery(sql, [], request, response)
+})
+
+app.get('/getClinicsByLogoURLContains', (request, response) => {
+    let value = request.query.value
+    if (!value) { handleError(response, 'Value required'); return }
+    let sql = clinicSelectSQL + ' WHERE logourl ILIKE $1'
+    doFilterQuery(sql, ['%' + value + '%'], request, response)
+})
+
+app.get('/getClinicsByLogoURLEmpty', (request, response) => {
+    let sql = clinicSelectSQL + ' WHERE logourl IS NULL'
+    doFilterQuery(sql, [], request, response)
+})
+
+app.get('/getClinicsByLogoURLNotEmpty', (request, response) => {
+    let sql = clinicSelectSQL + ' WHERE logourl IS NOT NULL'
     doFilterQuery(sql, [], request, response)
 })
 

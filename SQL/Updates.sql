@@ -1,0 +1,1 @@
+ALTER TABLE clinic ADD COLUMN logourl TEXT;
