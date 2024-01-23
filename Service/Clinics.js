@@ -118,6 +118,27 @@ app.get('/getClinicById', async (request, response) => {
     }
 })
 
+app.get('/getClinicLogoURLByPatient', async (request, response) => {
+    let healthgainzClient = new Client(healthgainzConfig)
+    try {
+        await healthgainzClient.connect()
+		await checkCredentials(request, ['Patient'], healthgainzClient)
+        let result = await healthgainzClient.query('SELECT clinic.logourl FROM staffmember JOIN clinic ON staffmember.clinicid = clinic.id WHERE staffmember.id = (SELECT staffmemberid FROM patient WHERE id = $1)', [request.query.patientid])
+		if (result.rows.length == 0) throw new Error('Patient not found')
+		else {
+            response.writeHead(200, {'Content-Type': 'application/json'})
+            let logoURL = result.rows[0].logourl
+		    response.end(JSON.stringify(logoURL))
+        }
+    }
+    catch (error) {
+        handleError(response, error.message)
+    }
+    finally {
+        await healthgainzClient.end()
+    }
+})
+
 app.get('/getClinics', async (request, response) => {
     let healthgainzClient = new Client(healthgainzConfig)
     try {
