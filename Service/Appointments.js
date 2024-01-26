@@ -118,6 +118,40 @@ app.get('/getAppointmentById', async (request, response) => {
     }
 })
 
+app.get('/getAppointmentsByStaffMember', async (request, response) => {
+    let healthgainzClient = new Client(healthgainzConfig)
+    try {
+        await healthgainzClient.connect()
+		await checkCredentials(request, staffRoles, healthgainzClient)
+        let result = await healthgainzClient.query(appointmentSelectSQL + ' WHERE patientid IN (SELECT id FROM patient WHERE staffmemberid = $1)', [request.query.staffmemberid])
+        response.writeHead(200, {'Content-Type': 'application/json'})
+        response.end(JSON.stringify(result.rows))
+    }
+    catch (error) {
+        handleError(response, error.message)
+    }
+    finally {
+        await healthgainzClient.end()
+    }
+})
+
+app.get('/getAppointmentsByClinic', async (request, response) => {
+    let healthgainzClient = new Client(healthgainzConfig)
+    try {
+        await healthgainzClient.connect()
+		await checkCredentials(request, ['Administrator', 'ClinicManager', 'StandInTherapist'], healthgainzClient)
+        let result = await healthgainzClient.query(appointmentSelectSQL + ' WHERE patientid IN (SELECT id FROM patient WHERE staffmemberid IN (SELECT id FROM staffmember WHERE clinicid = $1))', [request.query.clinicid])
+        response.writeHead(200, {'Content-Type': 'application/json'})
+        response.end(JSON.stringify(result.rows))
+    }
+    catch (error) {
+        handleError(response, error.message)
+    }
+    finally {
+        await healthgainzClient.end()
+    }
+})
+
 app.get('/getAppointmentsByPatient', async (request, response) => {
     let healthgainzClient = new Client(healthgainzConfig)
     try {
