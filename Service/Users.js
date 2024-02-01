@@ -3,6 +3,8 @@ const types = require('pg').types
 const express = require('express')
 const cors = require('cors')
 const https = require('https')
+const crypto = require('crypto')
+const nodemailer = require('nodemailer')
 
 const { key, cert, staffRoles, healthgainzConfig, checkCredentials, handleError } = require('./HealthGainzLibrary')
 
@@ -232,6 +234,45 @@ app.post('/getUserByEmailAddressAndPassword', async (request, response) => {
 		}
     }
     catch (error) {
+        handleError(response, error.message)
+    }
+    finally {
+        await healthgainzClient.end()
+    }
+})
+
+app.get('/resetPasswordByEmailAddress', async (request, response) => {
+    let healthgainzClient = new Client(healthgainzConfig)
+    try {
+        let emailAddress = request.query.emailaddress
+        let password = crypto.randomBytes(5).toString('hex')
+        await healthgainzClient.connect()
+        await healthgainzClient.query('BEGIN')
+        await healthgainzClient.query('SET TRANSACTION ISOLATION LEVEL SERIALIZABLE')
+        // check that email address is valid
+        let result = await healthgainzClient.query('SELECT id FROM "user" WHERE emailaddress = $1', [emailAddress])
+        if (result.rows.length == 0) throw new Error('User not found')
+        // email address is valid, so reset password and send email
+        await healthgainzClient.query('UPDATE "user" SET password = $1 WHERE emailaddress = $2', [password, emailAddress])
+        let transporter = nodemailer.createTransport({
+            service: 'hotmail',
+            auth: {
+                user: 'marksaunders418@hotmail.com',
+                pass: 'NotandMaybe'
+            }
+        })
+        await transporter.sendMail({
+            from: 'marksaunders418@hotmail.com',
+            to: emailAddress,
+            subject: 'Password Reset',
+            html: '<p>Your new temporary password is: ' + password + '</p>'
+        })
+        await healthgainzClient.query('COMMIT')
+		response.writeHead(200)
+		response.end()
+    }
+    catch (error) {
+        await healthgainzClient.query("ROLLBACK")
         handleError(response, error.message)
     }
     finally {
