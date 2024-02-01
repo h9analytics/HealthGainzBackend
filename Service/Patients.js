@@ -1,8 +1,11 @@
+const https = require('https')
+const fs = require('fs')
+
 const { Client } = require('pg')
 const types = require('pg').types
 const express = require('express')
 const cors = require('cors')
-const https = require('https')
+const nodemailer = require('nodemailer')
 
 const { key, cert, allRoles, staffRoles, healthgainzConfig, checkCredentials, handleError } = require('./HealthGainzLibrary')
 
@@ -43,6 +46,44 @@ const doFilterQuery = async (sql, values, request, response) => {
     }
 }
 
+const getWelcomeHTML = (user) => {
+    return '<div>' +
+        '    <div id="header">' +
+        '        <img src="" alt="Image">' +
+        '    </div>' +
+        '    <div id="content">' +
+        '        <p>Subject: Thanks for Registering with Health Gainz</p>' +
+        '        <p>Hi ' + user.name + '</p>' +
+        '        <p>Thank you for creating your account with Health Gainz.</p>' +
+        '        <p>Your account details are as follows:</p>' +
+        '        <p>Email Address - ' + user.emailaddress + '<br>Password - ' + user.password + '</p>' +
+        '        <p>To sign in to your account, please visit <a href="https://www.healthgainz.com">https://www.healthgainz.com</a> or click below.</p>' +
+        '        <p>If you have any questions regarding your account, click "Reply" in your email client and we\'ll be only too happy to help.</p>' +
+        '        <p>Claire McMullen<br>Health Gainz</p>' +
+        '        <p>Team HealthGainz</p>' +
+        '    </div>' +
+        '    <div id="footer">' +
+        '        <img src="" alt="Logo">' +
+        '    </div>' +
+        '</div>'
+}
+
+const sendWelcomeEmail = async (user) => {
+    let transporter = nodemailer.createTransport({
+        service: 'hotmail',
+        auth: {
+            user: 'marksaunders418@hotmail.com',
+            pass: 'NotandMaybe'
+        }
+    })
+    await transporter.sendMail({
+        from: 'marksaunders418@hotmail.com',
+        to: user.emailaddress,
+        subject: 'Welcome To HealthGainz',
+        html: getWelcomeHTML(user)
+    })
+}
+
 const app = express()
 app.use(cors())
 app.use(express.json())
@@ -52,11 +93,20 @@ app.post('/createPatient', async (request, response) => {
     try {
         await healthgainzClient.connect()
 		await checkCredentials(request, staffRoles, healthgainzClient)
+        await healthgainzClient.query('BEGIN')
+        await healthgainzClient.query('SET TRANSACTION ISOLATION LEVEL SERIALIZABLE')
         let result = await healthgainzClient.query('INSERT INTO patient VALUES (DEFAULT, $1, $2, $3) RETURNING *', Object.values(request.body))
-		response.writeHead(200, {'Content-Type': 'application/json'})
+		let userId = result.rows[0].userid
+        let userResult = await healthgainzClient.query('SELECT * FROM "user" WHERE id = $1', [userId])
+        let users = userResult.rows
+        if (users.length == 0) throw new Error('User not found')
+        await sendWelcomeEmail(users[0])
+        await healthgainzClient.query('COMMIT')
+        response.writeHead(200, {'Content-Type': 'application/json'})
         response.end(JSON.stringify(result.rows[0]))
     }
     catch (error) {
+        await healthgainzClient.query('ROLLBACK')
         handleError(response, error.message)
     }
     finally {
