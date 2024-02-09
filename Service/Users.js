@@ -264,7 +264,7 @@ app.get('/resetPasswordByEmailAddress', async (request, response) => {
         await transporter.sendMail({
             from: 'marksaunders418@hotmail.com',
             to: emailAddress,
-            subject: 'Password Reset',
+            subject: 'Health Gainz Password Reset',
             html: '<p>Your new temporary password is: ' + password + '</p>'
         })
         await healthgainzClient.query('COMMIT')

@@ -48,22 +48,20 @@ const doFilterQuery = async (sql, values, request, response) => {
 
 const getWelcomeHTML = (user) => {
     return '<div>' +
-        '    <div id="header">' +
-        '        <img src="" alt="Image">' +
+        '    <div id="header" style="background-color:Navy;">' +
+        '        <h3 style="color:White;padding:1em;">Subject: Thanks for registering with Health Gainz</h3>' +
         '    </div>' +
-        '    <div id="content">' +
-        '        <p>Subject: Thanks for Registering with Health Gainz</p>' +
+        '    <div id="content" style="padding:1em;">' +
         '        <p>Hi ' + user.name + '</p>' +
         '        <p>Thank you for creating your account with Health Gainz.</p>' +
+        '        <p>To get started, please download the app from the App Store or Google Play.</p>' +
         '        <p>Your account details are as follows:</p>' +
-        '        <p>Email Address - ' + user.emailaddress + '<br>Password - ' + user.password + '</p>' +
-        '        <p>To sign in to your account, please visit <a href="https://www.healthgainz.com">https://www.healthgainz.com</a> or click below.</p>' +
-        '        <p>If you have any questions regarding your account, click "Reply" in your email client and we\'ll be only too happy to help.</p>' +
-        '        <p>Claire McMullen<br>Health Gainz</p>' +
-        '        <p>Team HealthGainz</p>' +
+        '        <p>Email address: ' + user.emailaddress + '<br>Password: ' + user.password + '</p>' +
+        '        <p>If you have any questions regarding your account, please send us an email to support@healthgainz.com and we\'ll be happy to help.</p><br>' +
+        '        <p>Claire McMullen<br>Health Gainz</p><br>' +
         '    </div>' +
-        '    <div id="footer">' +
-        '        <img src="" alt="Logo">' +
+        '    <div id="footer" style="background-color:Orange;">' +
+        '        <h3 style="padding:1em;">Team Health Gainz</h3>' +
         '    </div>' +
         '</div>'
 }
@@ -79,7 +77,7 @@ const sendWelcomeEmail = async (user) => {
     await transporter.sendMail({
         from: 'marksaunders418@hotmail.com',
         to: user.emailaddress,
-        subject: 'Welcome To HealthGainz',
+        subject: 'Welcome To Health Gainz',
         html: getWelcomeHTML(user)
     })
 }
