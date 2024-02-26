@@ -1,0 +1,11 @@
+cd C:\HealthGainzBackend
+start cmd /k "node .\Service\Users.js"
+start cmd /k "node .\Service\Clinics.js"
+start cmd /k "node .\Service\StaffMembers.js"
+start cmd /k "node .\Service\Patients.js"
+start cmd /k "node .\Service\Appointments.js"
+start cmd /k "node .\Service\Exercises.js"
+start cmd /k "node .\Service\Playlists.js"
+start cmd /k "node .\Service\PlaylistExercises.js"
+start cmd /k "node .\Service\PatientPlaylists.js"
+start cmd /k "node .\Service\Videos.js"
