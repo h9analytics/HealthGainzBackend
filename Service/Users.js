@@ -255,14 +255,16 @@ app.get('/resetPasswordByEmailAddress', async (request, response) => {
         // email address is valid, so reset password and send email
         await healthgainzClient.query('UPDATE "user" SET password = $1 WHERE emailaddress = $2', [password, emailAddress])
         let transporter = nodemailer.createTransport({
-            service: 'hotmail',
+            host: 'mail.healthgainz.com',
+            port: 465,
             auth: {
-                user: 'marksaunders418@hotmail.com',
-                pass: 'NotandMaybe'
-            }
+                user: 'no-reply@healthgainz.com',
+                pass: 'Hello.2050'
+            },
+            secure: true
         })
         await transporter.sendMail({
-            from: 'marksaunders418@hotmail.com',
+            from: 'no-reply@healthgainz.com',
             to: emailAddress,
             subject: 'Health Gainz Password Reset',
             html: '<p>Your new temporary password is: ' + password + '</p>'

@@ -68,14 +68,16 @@ const getWelcomeHTML = (user) => {
 
 const sendWelcomeEmail = async (user) => {
     let transporter = nodemailer.createTransport({
-        service: 'hotmail',
+        host: 'mail.healthgainz.com',
+        port: 465,
         auth: {
-            user: 'marksaunders418@hotmail.com',
-            pass: 'NotandMaybe'
-        }
+            user: 'no-reply@healthgainz.com',
+            pass: 'Hello.2050'
+        },
+        secure: true
     })
     await transporter.sendMail({
-        from: 'marksaunders418@hotmail.com',
+        from: 'no-reply@healthgainz.com',
         to: user.emailaddress,
         subject: 'Welcome To Health Gainz',
         html: getWelcomeHTML(user)
